@@ -5,7 +5,9 @@
 
 void ioWrapper::sendStatus(){
 	IO_SERIAL_STREAM.print('<');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->wd.getLPS());
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->sensors.getPitch());
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->sensors.getRoll());
 	IO_SERIAL_STREAM.print(',');
 	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->wd.getLPS());
 	IO_SERIAL_STREAM.println('>');
