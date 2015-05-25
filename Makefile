@@ -8,9 +8,9 @@ MCU = atmega328p
 
 MONITOR_BAUDRATE = 57600
 AVRDUDE_ARD_BAUDRATE = 57600 
-MONITOR_PORT = /dev/rfcomm0
-
-CXXFLAGS += -D MPU9150
+MONITOR_PORT = /dev/ttyUSB0
+#-Wl,-u,vfscanf -lscanf_flt -lm 
+CXXFLAGS += -D MPU9150 -Wl,-u,vfscanf -lscanf_flt -lm 
 
 #########################################################
 ## Reszty nie ruszać

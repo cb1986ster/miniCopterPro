@@ -2,6 +2,50 @@
 
 #include "miniCopterPro.h"
 #include "autoPilot.h"
+#include <ctype.h>
+
+#include <ctype.h>
+
+float my_atof(char *s)
+{
+	float f = 0.0, fd = 0.0, d = 0.0;
+	int fe = 0;
+	char negative = 0;
+
+	while (isspace(*s) && *s != 0)
+		s++;
+
+	if (*s == '+')
+		s++;
+
+	if (*s == '-') {
+		s++;
+		negative = 1;
+	}
+
+	while (isdigit(*s) && *s != 0) {
+		f  *= 10;
+		f += (*s - '0');
+		s++;
+	}
+	if (*s == '.') {
+		s++;
+		d = 1.0;
+		while (isdigit(*s) && *s != 0) {
+			fd *= 10;
+			d *= 10;
+			fd += (*s - '0');
+			s++;
+		}
+		fd /= d;
+	}
+
+	f += fd;
+	if (negative)
+		f = -f;
+
+	return f;
+}
 
 void ioWrapper::sendStatus(){
 	IO_SERIAL_STREAM.print('<');
@@ -10,6 +54,10 @@ void ioWrapper::sendStatus(){
 	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->sensors.getRoll());
 	IO_SERIAL_STREAM.print(',');
 	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->wd.getLPS());
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->getGimbalTarget(0));
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->getGimbalTarget(1));
 	IO_SERIAL_STREAM.println('>');
 }
 
@@ -39,44 +87,51 @@ void ioWrapper::sendMesgNoStart(const char* msg){
 	IO_SERIAL_STREAM.print(buffer+1);
 }
 void ioWrapper::runCommand(char* cmd,uint8_t len){
+	static float tempFloat[6]={0,0,0,0,0,0};
+	static uint8_t i,pos_b,pos_e;
+	// IO_SERIAL_STREAM.print('@');
+	// IO_SERIAL_STREAM.println(cmd);
 	switch(cmd[0]){
-		case 'g': case 'G':/* Gimball */
-			switch(cmd[1]){ /* axis */
-				case 'x': case 'X':
-					((miniCopterPro*)copterPointer)->setGimbalTarget(0 , ((float)(cmd[2]-'1'))/5.f-1);
-					break;
-				case 'y':
-				case 'Y':
-					((miniCopterPro*)copterPointer)->setGimbalTarget(1 , ((float)(cmd[2]-'1'))/5.f-1);
-					break;
+		case 'p': case 'P': /* GetParams */
+			/*
+				targetRoll,targetPitch,targetRotation,altChangeTarget,gimbalRoll,gimbalPitch
+				1 			2			3              4               5          6
+			*/
+			// sscanf(cmd+1,"%f:%f:%f:%f:%f:%f",tempFloat+0,tempFloat+1,tempFloat+2,tempFloat+3,tempFloat+4,tempFloat+5);
+			pos_b = 1;
+			pos_e = 2;
+			cmd[len] = ':';
+			for(i=0;i<6;){
+				if(cmd[pos_e]==':'){
+					cmd[pos_e] = 0;
+					tempFloat[i] = my_atof(cmd+pos_b);
+					
+					pos_b = pos_e+1;
+					pos_e = pos_b+1;
+					i++;
+				} else
+					pos_e++;
 			}
+			((miniCopterPro*)copterPointer)->setGimbalTarget(0 , tempFloat[4]);
+			((miniCopterPro*)copterPointer)->setGimbalTarget(1 , tempFloat[5]);
 			break;
-		case 'p': case 'P':/* Pilot */
-			switch(cmd[1]){ /* axis */
-				case 'm': case 'M':
-					switch(cmd[2]){
-						case 'g': case 'G': 
-							((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
-							break;
-						case 'i': case 'I': 
-							((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_IDLE);
-							break;
-						case 'm': case 'M': 
-							((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_MOTOR_TEST);
-							break;
-					}
-					break;
+		case 'm': case 'M':
+			if(strncmp(cmd+1,"IDLE",4)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_IDLE);
+			} else if(strncmp(cmd+1,"GIMBAL",6)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
+			} else if(strncmp(cmd+1,"MOTOR_TEST",10)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_MOTOR_TEST);
 			}
 			break;
 	}
 }
+#define inBuffMaxLen 56
 void ioWrapper::update(){
-	static char inBuff[16];
+	static char inBuff[inBuffMaxLen];
 	static uint8_t inBuffPos=0;
 	while(IO_SERIAL_STREAM.available()){
 		inBuff[inBuffPos] = IO_SERIAL_STREAM.read();
-		IO_SERIAL_STREAM.print("> ");
-		IO_SERIAL_STREAM.println(inBuff[inBuffPos]);
 		if(inBuffPos==0){
 			if(inBuff[inBuffPos]=='<')
 				inBuffPos++;
@@ -86,7 +141,7 @@ void ioWrapper::update(){
 				runCommand(inBuff+1,inBuffPos-1);
 				inBuffPos = 0;
 			} else {
-				if(inBuffPos >= 16)
+				if(inBuffPos >= inBuffMaxLen)
 					inBuffPos = 0;
 				else 	
 					inBuffPos++;

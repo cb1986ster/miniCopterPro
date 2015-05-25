@@ -4,7 +4,7 @@
 
 void autoPilot::init(){
 	((miniCopterPro*)copterPointer)->io.sendMesgNoNl(ioText_pilotInit);
-	workMode = PILOT_MODE_IDLE;	
+	workMode = PILOT_MODE_GIMBAL_RUN;	
 	((miniCopterPro*)copterPointer)->io.sendMesgNoStart(ioText_OK);
 }
 void autoPilot::fixGimbal(){
@@ -21,9 +21,17 @@ void autoPilot::doJob(){
 	static float cspeed = 0;
 	switch(workMode){
 		case PILOT_MODE_IDLE:
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(0,0);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(1,0);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(2,0);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(3,0);
 		break;
 		case PILOT_MODE_GIMBAL_RUN:
 			fixGimbal();
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(0,0);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(1,0);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(2,0);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(3,0);
 		break;
 		case PILOT_MODE_MOTOR_TEST:
 			if(mno % 2 ==0) cspeed += 0.001;
