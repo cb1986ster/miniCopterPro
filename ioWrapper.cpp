@@ -93,25 +93,23 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 	// IO_SERIAL_STREAM.println(cmd);
 	switch(cmd[0]){
 		case 'p': case 'P': /* GetParams */
-			/*
-				targetRoll,targetPitch,targetRotation,altChangeTarget,gimbalRoll,gimbalPitch
-				1 			2			3              4               5          6
-			*/
-			// sscanf(cmd+1,"%f:%f:%f:%f:%f:%f",tempFloat+0,tempFloat+1,tempFloat+2,tempFloat+3,tempFloat+4,tempFloat+5);
 			pos_b = 1;
 			pos_e = 2;
 			cmd[len] = ':';
 			for(i=0;i<6;){
 				if(cmd[pos_e]==':'){
 					cmd[pos_e] = 0;
-					tempFloat[i] = my_atof(cmd+pos_b);
-					
+					tempFloat[i] = my_atof(cmd+pos_b);					
 					pos_b = pos_e+1;
 					pos_e = pos_b+1;
 					i++;
 				} else
 					pos_e++;
 			}
+			((miniCopterPro*)copterPointer)->setPlatformTarget(tempFloat[0],tempFloat[1]);
+			((miniCopterPro*)copterPointer)->setRotationTarget(tempFloat[2]);
+			((miniCopterPro*)copterPointer)->setAltChangeTarget(tempFloat[3]);
+
 			((miniCopterPro*)copterPointer)->setGimbalTarget(0 , tempFloat[4]);
 			((miniCopterPro*)copterPointer)->setGimbalTarget(1 , tempFloat[5]);
 			break;
@@ -122,6 +120,14 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
 			} else if(strncmp(cmd+1,"MOTOR_TEST",10)==0){
 				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_MOTOR_TEST);
+			} else if(strncmp(cmd+1,"LAND",4)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_LANDING);
+			} else if(strncmp(cmd+1,"START",5)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_START);
+			} else if(strncmp(cmd+1,"HOLD",4)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_STABLISATION);
+			} else if(strncmp(cmd+1,"FLY",3)==0){
+				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_FLY);
 			}
 			break;
 	}

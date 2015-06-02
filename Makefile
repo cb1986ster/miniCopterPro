@@ -1,6 +1,6 @@
 PROJECT_DIR = $(CURDIR)
 USER_LIB_PATH := $(PROJECT_DIR)/lib
-ARDUINO_LIBS += I2Cdev NewPing Servo mpu SFE_BMP180 freeram
+ARDUINO_LIBS += I2Cdev NewPing Servo mpu SFE_BMP180 freeram PID
 ARCHITECTURE  = avr
 BOARD_TAG = nano
 BOARD_SUB = atmega328

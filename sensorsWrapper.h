@@ -21,10 +21,17 @@ class sensorsWrapper
 		void calibration();
 		float getPitch(){return pitch;};
 		float getRoll(){return roll;};
+		double* getRollPointer(){return (double*)&roll;}
+		double* getPitchPointer(){return (double*)&pitch;}
+		double* getYawPointer(){return (double*)&zRotation;}
+		double* getAltChangePointer(){return (double*)&altChange;}
+
 	private:
 		float roll;
 		float pitch;
 		float zRotation;
+
+		double altChange;
 
 		uint8_t tmp;
 		void* copterPointer;

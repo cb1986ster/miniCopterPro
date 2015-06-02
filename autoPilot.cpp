@@ -5,6 +5,7 @@
 void autoPilot::init(){
 	((miniCopterPro*)copterPointer)->io.sendMesgNoNl(ioText_pilotInit);
 	workMode = PILOT_MODE_GIMBAL_RUN;	
+	initPID();
 	((miniCopterPro*)copterPointer)->io.sendMesgNoStart(ioText_OK);
 }
 void autoPilot::fixGimbal(){
@@ -16,10 +17,55 @@ void autoPilot::fixGimbal(){
 	);
 }
 
+void autoPilot::initPID(){
+	pidRoll = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getRollPointer(),
+		&pidRollValue,
+		((miniCopterPro*)copterPointer)->getRollTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+	pidPitch = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getPitchPointer(),
+		&pidPitchValue,
+		((miniCopterPro*)copterPointer)->getPitchTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+	pidYaw = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getYawPointer(),
+		&pidYawValue,
+		((miniCopterPro*)copterPointer)->getYawTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+	pidThrotle = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getAltChangePointer(),
+		&pidYawValue,
+		((miniCopterPro*)copterPointer)->getAltChangeTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+}
+
+void autoPilot::fixPlatform(){
+	// TODO:this
+}
+
 void autoPilot::doJob(){
 	static uint8_t mno = 0;
 	static float cspeed = 0;
 	switch(workMode){
+		case PILOT_MODE_FLY:
+			break;
+		case PILOT_MODE_START:
+			break;
+		case PILOT_MODE_LANDING:
+			break;
+		case PILOT_MODE_EMERGENCY:
+			break;
+		case PILOT_MODE_STABLISATION:
+			break;
 		case PILOT_MODE_IDLE:
 			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(0,0);
 			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(1,0);

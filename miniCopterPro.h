@@ -22,7 +22,14 @@ class miniCopterPro
 		void setPlatformTarget(uint8_t aixs,float target){patformTarget[aixs] = target;};
 		void setRotationTarget(float target){rotationTarget = target;};
 		void setAltChangeTarget(float target){altChangeTarget = target;};
+
+		double* getRollTargetPointer(){return (double*)patformTarget;}
+		double* getPitchTargetPointer(){return ((double*)patformTarget)+1;}
+		double* getYawTargetPointer(){return (double*)&rotationTarget;}
+		double* getAltChangeTargetPointer(){return (double*)&altChangeTarget;}
+
 	private:
+
 		void setup();
 		void loop();
 		float gimbalTarget[2];
