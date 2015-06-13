@@ -58,6 +58,16 @@ void ioWrapper::sendStatus(){
 	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->getGimbalTarget(0));
 	IO_SERIAL_STREAM.print(',');
 	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->getGimbalTarget(1));
+
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(0));
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(1));
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(2));
+	IO_SERIAL_STREAM.print(',');
+	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(3));
+
 	IO_SERIAL_STREAM.println('>');
 }
 
@@ -106,7 +116,8 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 				} else
 					pos_e++;
 			}
-			((miniCopterPro*)copterPointer)->setPlatformTarget(tempFloat[0],tempFloat[1]);
+			((miniCopterPro*)copterPointer)->setPlatformTarget(0,tempFloat[0]);
+			((miniCopterPro*)copterPointer)->setPlatformTarget(1,tempFloat[1]);
 			((miniCopterPro*)copterPointer)->setRotationTarget(tempFloat[2]);
 			((miniCopterPro*)copterPointer)->setAltChangeTarget(tempFloat[3]);
 

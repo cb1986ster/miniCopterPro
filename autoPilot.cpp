@@ -18,34 +18,34 @@ void autoPilot::fixGimbal(){
 }
 
 void autoPilot::initPID(){
-	pidRoll = new PID(
-		((miniCopterPro*)copterPointer)->sensors.getRollPointer(),
-		&pidRollValue,
-		((miniCopterPro*)copterPointer)->getRollTargetPointer(),
-		0.0,0.0,0.0,
-		DIRECT
-	);
-	pidPitch = new PID(
-		((miniCopterPro*)copterPointer)->sensors.getPitchPointer(),
-		&pidPitchValue,
-		((miniCopterPro*)copterPointer)->getPitchTargetPointer(),
-		0.0,0.0,0.0,
-		DIRECT
-	);
-	pidYaw = new PID(
-		((miniCopterPro*)copterPointer)->sensors.getYawPointer(),
-		&pidYawValue,
-		((miniCopterPro*)copterPointer)->getYawTargetPointer(),
-		0.0,0.0,0.0,
-		DIRECT
-	);
-	pidThrotle = new PID(
-		((miniCopterPro*)copterPointer)->sensors.getAltChangePointer(),
-		&pidYawValue,
-		((miniCopterPro*)copterPointer)->getAltChangeTargetPointer(),
-		0.0,0.0,0.0,
-		DIRECT
-	);
+	// pidRoll = new PID(
+	// 	((miniCopterPro*)copterPointer)->sensors.getRollPointer(),
+	// 	&pidRollValue,
+	// 	((miniCopterPro*)copterPointer)->getRollTargetPointer(),
+	// 	0.0,0.0,0.0,
+	// 	DIRECT
+	// );
+	// pidPitch = new PID(
+	// 	((miniCopterPro*)copterPointer)->sensors.getPitchPointer(),
+	// 	&pidPitchValue,
+	// 	((miniCopterPro*)copterPointer)->getPitchTargetPointer(),
+	// 	0.0,0.0,0.0,
+	// 	DIRECT
+	// );
+	// pidYaw = new PID(
+	// 	((miniCopterPro*)copterPointer)->sensors.getYawPointer(),
+	// 	&pidYawValue,
+	// 	((miniCopterPro*)copterPointer)->getYawTargetPointer(),
+	// 	0.0,0.0,0.0,
+	// 	DIRECT
+	// );
+	// pidThrotle = new PID(
+	// 	((miniCopterPro*)copterPointer)->sensors.getAltChangePointer(),
+	// 	&pidYawValue,
+	// 	((miniCopterPro*)copterPointer)->getAltChangeTargetPointer(),
+	// 	0.0,0.0,0.0,
+	// 	DIRECT
+	// );
 }
 
 void autoPilot::fixPlatform(){
@@ -80,18 +80,24 @@ void autoPilot::doJob(){
 			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(3,0);
 		break;
 		case PILOT_MODE_MOTOR_TEST:
-			if(mno % 2 ==0) cspeed += 0.001;
-			else cspeed -= 0.001;
-			if(cspeed > 0.2){
-				cspeed = 0.2;
-				mno++;
-			} else if(cspeed < 0) {
-				cspeed = 0;
-				if(mno==7)mno=0;
-				else mno++;
-			}
-			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(mno/2,cspeed);
-			delay(10);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(0,
+				((miniCopterPro*)copterPointer)->getPitchTarget()
+			);
+			((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(1,
+				((miniCopterPro*)copterPointer)->getRollTarget()
+			);
+			// if(mno % 2 ==0) cspeed += 0.001;
+			// else cspeed -= 0.001;
+			// if(cspeed > 0.2){
+			// 	cspeed = 0.2;
+			// 	mno++;
+			// } else if(cspeed < 0) {
+			// 	cspeed = 0;
+			// 	if(mno==7)mno=0;
+			// 	else mno++;
+			// }
+			// ((miniCopterPro*)copterPointer)->effectors.setMotorSpeed(mno/2,cspeed);
+			// delay(10);
 			break;
 	}
 }

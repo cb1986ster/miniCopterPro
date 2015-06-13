@@ -46,15 +46,15 @@ void effectorsWrapper::motorInit(){
 
 void effectorsWrapper::motorsUpdate(){
 	motor[0].write(
-		constrain((int)(motorsSpeed[0]*180.0),5,180)
+		constrain((int)(motorsSpeed[0]*180.0),EFFECTORS_MOTOR_MIN_VALUE,EFFECTORS_MOTOR_MAX_VALUE)
 	); 
 	motor[1].write(
-		constrain((int)(motorsSpeed[1]*180.0),5,180)
+		constrain((int)(motorsSpeed[1]*180.0),EFFECTORS_MOTOR_MIN_VALUE,EFFECTORS_MOTOR_MAX_VALUE)
 	); 
 	motor[2].write(
-		constrain((int)(motorsSpeed[2]*180.0),5,180)
+		constrain((int)(motorsSpeed[2]*180.0),EFFECTORS_MOTOR_MIN_VALUE,EFFECTORS_MOTOR_MAX_VALUE)
 	); 
 	motor[3].write(
-		constrain((int)(motorsSpeed[3]*180.0),5,180)
+		constrain((int)(motorsSpeed[3]*180.0),EFFECTORS_MOTOR_MIN_VALUE,EFFECTORS_MOTOR_MAX_VALUE)
 	); 
 }

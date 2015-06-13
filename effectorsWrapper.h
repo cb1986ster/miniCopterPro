@@ -13,6 +13,9 @@
 #define EFFECTORS_MOTOR_NO 4
 #define EFFECTORS_GIMBAL_NO 4
 
+#define EFFECTORS_MOTOR_MAX_VALUE 96
+#define EFFECTORS_MOTOR_MIN_VALUE 3
+
 class effectorsWrapper
 {
 	public:
@@ -21,6 +24,7 @@ class effectorsWrapper
 		void update();	
 		void setMotorSpeed(uint8_t motorNo, float newSpeed){motorsSpeed[motorNo] = newSpeed;};
 		void setGimbalArc(uint8_t motorNo, float newArc){gimbalArc[motorNo] = newArc;};
+		float getMotorSpeed(uint8_t motorNo){return constrain((int)(motorsSpeed[motorNo]*180.0),EFFECTORS_MOTOR_MIN_VALUE,EFFECTORS_MOTOR_MAX_VALUE);}
 
 	private:
 		uint8_t i; // tmp var

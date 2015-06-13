@@ -28,6 +28,11 @@ class miniCopterPro
 		double* getYawTargetPointer(){return (double*)&rotationTarget;}
 		double* getAltChangeTargetPointer(){return (double*)&altChangeTarget;}
 
+		double getRollTarget(){return patformTarget[0];}
+		double getPitchTarget(){return patformTarget[1];}
+		double getYawTarget(){return rotationTarget;}
+		double getAltChangeTarget(){return altChangeTarget;}
+
 	private:
 
 		void setup();

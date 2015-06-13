@@ -17,9 +17,11 @@ ioData = {
 	'input' : {
 		'roll':0.0,
 		'pitch':0.0,
+		'rotate':0.0,
 		'lps':0.0,
 		'gimbalRoll':0.0,
-		'gimbalPitch':0.0
+		'gimbalPitch':0.0,
+		'motors':[ 0.0, 0.0, 0.0, 0.0]
 	}
 }
 
@@ -40,12 +42,18 @@ def communicationInput(ser):
 	global ioData
 	while isAppRunning:
 		line = ser.readline()
-		data = re.findall(r"\<([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+)\>", line)
+		data = re.findall(r"\<([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+)\>", line)
 		if len(data) > 0:
 			ioData['input']['pitch'] = float(data[-1][0])
 			ioData['input']['roll'] = float(data[-1][1])
 			ioData['input']['lps'] = ioData['input']['lps']*0.9 + float(data[-1][2])*0.1
-		# print line
+			ioData['input']['gimbalRoll'] = float(data[-1][3])
+			ioData['input']['gimbalPitch'] = float(data[-1][4])
+			# motors
+			ioData['input']['motors'][0] = float(data[-1][5])
+			ioData['input']['motors'][1] = float(data[-1][6])
+			ioData['input']['motors'][2] = float(data[-1][7])
+			ioData['input']['motors'][3] = float(data[-1][8])
 
 def communicationOutput(ser):
 	global isAppRunning
@@ -56,9 +64,10 @@ def communicationOutput(ser):
 		while len(ioData['output']['msgs']) > 0:
 			m = ioData['output']['msgs'].pop()
 			ser.write("<%s>"%m)
+			print '                  sending: %s'%m
 
 		i+=1
-		if i > 50:
+		if i > 25:
 			i=0
 			m = "<p%0.3f:%0.3f:%0.3f:%0.3f:%0.3f:%0.3f>"%(
 				ioData['output']['roll'],
@@ -69,10 +78,10 @@ def communicationOutput(ser):
 				ioData['output']['gimbalPitch']
 			)
 			ser.write(m)
-			# print m
+			# print '          ','          ',m
 
 def getNormalalizedAxisValue(device,axisNo):
-	return float(pad.get_axis(axisNo))
+	return float(pad.get_axis(axisNo))/2.0
 
 def limitTo(val,val_min=-1,val_max=1):
 	return min(val_max,max(val_min,val))
@@ -104,13 +113,16 @@ def readUserInput(events):
 		# else:
 		# 	print event
 		# y = limitTo(getNormalalizedAxisValue(pad,0))
-		# r = limitTo(getNormalalizedAxisValue(pad,3))
-		# p = limitTo(getNormalalizedAxisValue(pad,2))
+		
 		# t = limitTo(getNormalalizedAxisValue(pad,1))
 		
 		# ioData['output']['gimbalRoll'] = limitTo(getNormalalizedAxisValue(pad,3))
 		# ioData['output']['gimbalPitch'] = limitTo(getNormalalizedAxisValue(pad,2))
 
+		ioData['output']['roll'] = limitTo(getNormalalizedAxisValue(pad,0))*-1
+		ioData['output']['pitch'] = limitTo(getNormalalizedAxisValue(pad,2))
+		ioData['output']['rotate'] = -limitTo(getNormalalizedAxisValue(pad,3))
+		
 		# Przyciski
 		if pad != None:
 			if pad.get_button(9): # Wyjscie z programu
@@ -125,11 +137,27 @@ def readUserInput(events):
 				if pad.get_button(keyNo):
 					ioData['output']['msgs'].append('m%s'%modeStr)
 
+rotationValue =pygame.image.load('rotation.png')
+rotationBackground =pygame.image.load('horizontBackground.png')
+rotationTarget =pygame.image.load('rotationTarget.png')
+rotationFont = pygame.font.SysFont("monospace", 15)
+
 horizontRoll = pygame.image.load('horizontRoll.png')
 horizontPitch =pygame.image.load('horizontPitch.png')
 horizontBackground =pygame.image.load('horizontBackground.png')
 horizontTarget =pygame.image.load('horizontTarget.png')
-horizontFont = pygame.font.SysFont("monospace", 12)
+horizontFont = pygame.font.SysFont("monospace", 15)
+
+
+def gradGreenYellowRed(v):
+	if v>0.5:
+		r = 255
+		g = int(255*(1.0-v)/0.5)
+	else:
+		g = 255
+		r = int(512*v)
+	return (r,g,16)
+
 def renderBalance(x,y,value,target,image):
 	screen.blit(horizontBackground, (x-(horizontBackground.get_width()/2), y-(horizontBackground.get_height()/2)))
 	targetRotate = pygame.transform.rotate(horizontTarget, target * 180)
@@ -140,6 +168,29 @@ def renderBalance(x,y,value,target,image):
 	descTarget = horizontFont.render("%f"%target, 1, (255,128,128))
 	screen.blit(descTarget, (x-(descTarget.get_width()/2), y-(horizontBackground.get_height()/2)-descTarget.get_height()))
 	screen.blit(descValue, (x-(descValue.get_width()/2), y+(horizontBackground.get_height()/2)))
+
+def renderRotate(x,y,value,target):
+	screen.blit(rotationBackground, (x-(rotationBackground.get_width()/2), y-(rotationBackground.get_height()/2)))
+	targetRotate = pygame.transform.rotate(rotationTarget, target * 180)
+	screen.blit(targetRotate, (x-(targetRotate.get_width()/2), y-(targetRotate.get_height()/2)))
+	valueRotated = pygame.transform.rotate(rotationValue, value * 180)
+	screen.blit(valueRotated, (x-(valueRotated.get_width()/2), y-(valueRotated.get_height()/2)))
+	descValue = rotationFont.render("%f"%value, 1, (255,255,128))
+	descTarget = rotationFont.render("%f"%target, 1, (255,128,128))
+	screen.blit(descTarget, (x-(descTarget.get_width()/2), y-(rotationBackground.get_height()/2)-descTarget.get_height()))
+	screen.blit(descValue, (x-(descValue.get_width()/2), y+(rotationBackground.get_height()/2)))
+
+def renderMotorSpeed(x,y,value):
+	value = value/255.0
+	msx = 40
+	msy = 80
+	pygame.draw.rect(screen,(64,64,255),(x-(msx/2),y-(msy/2),msx,msy),0)
+	height = int((msy-10)*value)
+	offset = int((1-value)*(msy-10))
+	pygame.draw.rect(screen,gradGreenYellowRed(value),(5+x-(msx/2),offset+5+y-(msy/2),msx-10,height),0)
+	descValue = rotationFont.render("%d%%"%(100*value), 1, (255,255,128))
+	screen.blit(descValue, (x-(descValue.get_width()/2), y+(msy/2)))
+
 
 
 def appGui():
@@ -155,6 +206,13 @@ def appGui():
 
 		renderBalance(266,200,ioData['input']['roll'],ioData['output']['roll'],horizontRoll)
 		renderBalance(533,200,ioData['input']['pitch'],ioData['output']['pitch'],horizontPitch)
+		renderRotate(533,420,ioData['input']['rotate'],ioData['output']['rotate'])
+
+		renderMotorSpeed(30,50, ioData['input']['motors'][0])
+		renderMotorSpeed(770,520, ioData['input']['motors'][1])
+		renderMotorSpeed(770,50, ioData['input']['motors'][2])
+		renderMotorSpeed(30,520, ioData['input']['motors'][3])
+
 
 		lpsText = myfont.render("LPS: %f"%(ioData['input']['lps']*10), 1, (255,255,0))
 		screen.blit(lpsText, (200, 20))
@@ -187,4 +245,4 @@ except:
 	print "Error: unable to start thread"
 
 while isAppRunning:
-	time.sleep(.1)
+	time.sleep(.05)
