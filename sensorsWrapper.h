@@ -21,6 +21,8 @@ class sensorsWrapper
 		void calibration();
 		float getPitch(){return pitch;};
 		float getRoll(){return roll;};
+		double getHeight(){return (sonarAlt < 5.0 && sonarAlt > 0.0)?sonarAlt:baroAlt;};
+		double getBatteryStatus(){return batteryStatus;};
 		double* getRollPointer(){return (double*)&roll;}
 		double* getPitchPointer(){return (double*)&pitch;}
 		double* getYawPointer(){return (double*)&zRotation;}
@@ -36,19 +38,19 @@ class sensorsWrapper
 		uint8_t tmp;
 		void* copterPointer;
 		/* IMU */
-		void imuInit();
-		void imuUpdate();
+		inline void imuInit();
+		inline void imuUpdate();
 
 		/* Battery status */
-		uint16_t batteryStatus;
-		void batteryInit();
-		void batteryUpdate();
+		double batteryStatus;
+		inline void batteryInit();
+		inline void batteryUpdate();
 
 		/* Sonar */
 		NewPing* sonar;
 		uint16_t sonarAlt;
-		void sonarInit();
-		void sonarUpdate();
+		inline void sonarInit();
+		inline void sonarUpdate();
 
 		/* Barometer */
 		SFE_BMP180 pressure;
@@ -58,8 +60,8 @@ class sensorsWrapper
 		double temperatureValue;
 		double baroAlt;
 		double getPressure();
-		void baroInit();
-		void baroUpdate();
+		inline void baroInit();
+		inline void baroUpdate();
 };
 
 #endif

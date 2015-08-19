@@ -18,34 +18,34 @@ void autoPilot::fixGimbal(){
 }
 
 void autoPilot::initPID(){
-	// pidRoll = new PID(
-	// 	((miniCopterPro*)copterPointer)->sensors.getRollPointer(),
-	// 	&pidRollValue,
-	// 	((miniCopterPro*)copterPointer)->getRollTargetPointer(),
-	// 	0.0,0.0,0.0,
-	// 	DIRECT
-	// );
-	// pidPitch = new PID(
-	// 	((miniCopterPro*)copterPointer)->sensors.getPitchPointer(),
-	// 	&pidPitchValue,
-	// 	((miniCopterPro*)copterPointer)->getPitchTargetPointer(),
-	// 	0.0,0.0,0.0,
-	// 	DIRECT
-	// );
-	// pidYaw = new PID(
-	// 	((miniCopterPro*)copterPointer)->sensors.getYawPointer(),
-	// 	&pidYawValue,
-	// 	((miniCopterPro*)copterPointer)->getYawTargetPointer(),
-	// 	0.0,0.0,0.0,
-	// 	DIRECT
-	// );
-	// pidThrotle = new PID(
-	// 	((miniCopterPro*)copterPointer)->sensors.getAltChangePointer(),
-	// 	&pidYawValue,
-	// 	((miniCopterPro*)copterPointer)->getAltChangeTargetPointer(),
-	// 	0.0,0.0,0.0,
-	// 	DIRECT
-	// );
+	pidRoll = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getRollPointer(),
+		&pidRollValue,
+		((miniCopterPro*)copterPointer)->getRollTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+	pidPitch = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getPitchPointer(),
+		&pidPitchValue,
+		((miniCopterPro*)copterPointer)->getPitchTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+	pidYaw = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getYawPointer(),
+		&pidYawValue,
+		((miniCopterPro*)copterPointer)->getYawTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
+	pidThrotle = new PID(
+		((miniCopterPro*)copterPointer)->sensors.getAltChangePointer(),
+		&pidYawValue,
+		((miniCopterPro*)copterPointer)->getAltChangeTargetPointer(),
+		0.0,0.0,0.0,
+		DIRECT
+	);
 }
 
 void autoPilot::fixPlatform(){

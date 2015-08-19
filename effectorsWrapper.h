@@ -33,13 +33,13 @@ class effectorsWrapper
 		/* Motors */
 		float motorsSpeed[EFFECTORS_MOTOR_NO];
 		Servo motor[EFFECTORS_MOTOR_NO];
-		void motorInit();
+		inline void motorInit();
 		void motorsUpdate();
 
 		/* Gimbal */
 		float gimbalArc[EFFECTORS_GIMBAL_NO];
 		Servo gimbal[EFFECTORS_GIMBAL_NO];	
-		void gimbalInit();
+		inline void gimbalInit();
 		void gimbalUpdate();
 };
 

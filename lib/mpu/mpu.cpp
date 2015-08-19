@@ -1,7 +1,7 @@
 #include "mpu.h"
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
-#include "helper_3dmath.h"
+// #include "helper_3dmath.h"
 
 #define FSR 2000
 //#define GYRO_SENS       ( 131.0f * 250.f / (float)FSR )
@@ -157,17 +157,22 @@ static void quaternionToEuler( const struct s_quat *q, float* x, float* y, float
         }
 }
 
-static inline float wrap_180(float x) {
-	return (x<-180.f?x+360.f:(x>180.f?x-180.f:x));
-}
+// static inline float wrap_180(float x) {
+// 	return (x<-180.f?x+360.f:(x>180.f?x-180.f:x));
+// }
 
-static inline float shift_180(float x) {
-	return x+180>180?x-180:x+180;
-}
+// static inline float shift_180(float x) {
+// 	return x+180>180?x-180:x+180;
+// }
 
-void mympu_reset_fifo() {
-	mpu_reset_fifo();
-}
+// void mympu_reset_fifo() {
+// 	mpu_reset_fifo();
+// }
+
+#define mympu_reset_fifo() mpu_reset_fifo()
+#define wrap_180(x) (x<-180.f?x+360.f:(x>180.f?x-180.f:x))
+#define shift_180(x) (x+180>180?x-180:x+180)
+
 
 #ifdef MPU9150
 int8_t mympu_update_compass() {
@@ -271,5 +276,3 @@ int8_t mympu_update() {
 
 	return 0;
 }
-
-

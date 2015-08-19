@@ -48,53 +48,55 @@ float my_atof(char *s)
 }
 
 void ioWrapper::sendStatus(){
-	IO_SERIAL_STREAM.print('<');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->sensors.getPitch());
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->sensors.getRoll());
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->wd.getLPS());
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->getGimbalTarget(0));
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->getGimbalTarget(1));
+	IO_SERIAL_STREAM.write('<');
+	writeValue( ((miniCopterPro*)copterPointer)->sensors.getPitch());
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->sensors.getRoll());
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->wd.getLPS());
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->getGimbalTarget(0));
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->getGimbalTarget(1));
 
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(0));
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(1));
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(2));
-	IO_SERIAL_STREAM.print(',');
-	IO_SERIAL_STREAM.print(((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(3));
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(0));
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(1));
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(2));
+	sendSeparator();
+	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(3));
 
-	IO_SERIAL_STREAM.println('>');
+	IO_SERIAL_STREAM.write('>');
+	lineEnd();
 }
 
 void ioWrapper::init(){
 	IO_SERIAL_STREAM.begin(IO_SERIAL_BAUD);
-	for(int i = IO_MAX_MSG_LEN-1;i;i--)buffer[i]=0;
-	buffer[0]='|';
+	lineBegin();
 	sendMesg(ioText_ioInited);
+	lineEnd();
 }
 
 void ioWrapper::sendMesg(const char* msg){
-	strcpy_P(buffer+1,msg);
-	IO_SERIAL_STREAM.println(buffer);
+	lineBegin();
+	IO_SERIAL_STREAM.write(msg);
+	lineEnd();
 }
 void ioWrapper::sendMesg(const char* msg,int value){
-	char obuf[IO_MAX_MSG_LEN+5];
-	strcpy_P(buffer+1,msg);
-	sprintf(obuf,buffer,value);
-	IO_SERIAL_STREAM.println(obuf);
+	char obuf[IO_MAX_MSG_LEN];
+	sprintf(obuf,msg,value);
+	lineBegin();
+	IO_SERIAL_STREAM.write(obuf);
+	lineEnd();
 }
 void ioWrapper::sendMesgNoNl(const char* msg){
-	strcpy_P(buffer+1,msg);
-	IO_SERIAL_STREAM.print(buffer);
+	lineBegin();
+	IO_SERIAL_STREAM.write(msg);
 }
 void ioWrapper::sendMesgNoStart(const char* msg){
-	strcpy_P(buffer+1,msg);
-	IO_SERIAL_STREAM.print(buffer+1);
+	IO_SERIAL_STREAM.write(msg);
 }
 void ioWrapper::runCommand(char* cmd,uint8_t len){
 	static float tempFloat[6]={0,0,0,0,0,0};
@@ -125,20 +127,28 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 			((miniCopterPro*)copterPointer)->setGimbalTarget(1 , tempFloat[5]);
 			break;
 		case 'm': case 'M':
-			if(strncmp(cmd+1,"IDLE",4)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_IDLE);
-			} else if(strncmp(cmd+1,"GIMBAL",6)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
-			} else if(strncmp(cmd+1,"MOTOR_TEST",10)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_MOTOR_TEST);
-			} else if(strncmp(cmd+1,"LAND",4)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_LANDING);
-			} else if(strncmp(cmd+1,"START",5)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_START);
-			} else if(strncmp(cmd+1,"HOLD",4)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_STABLISATION);
-			} else if(strncmp(cmd+1,"FLY",3)==0){
-				((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_FLY);
+			switch(cmd[1]){
+				case 'I': case 'i':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_IDLE);
+					break;
+				case 'G': case 'g':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
+					break;
+				case 'T': case 't':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_MOTOR_TEST);
+					break;
+				case 'L': case 'l':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_LANDING);
+					break;
+				case 'S': case 's':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_START);
+					break;
+				case 'H': case 'h':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_STABLISATION);
+					break;
+				case 'F': case 'f':
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_FLY);
+					break;
 			}
 			break;
 	}

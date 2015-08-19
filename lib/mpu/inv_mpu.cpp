@@ -808,22 +808,7 @@ int mpu_lp_accel_mode(unsigned char rate)
  *  @param[out] timestamp   Timestamp in milliseconds. Null if not needed.
  *  @return     0 if successful.
  */
-int mpu_get_gyro_reg(short *data, unsigned long *timestamp)
-{
-    unsigned char tmp[6];
-
-    if (!(st->chip_cfg.sensors & INV_XYZ_GYRO))
-        return -1;
-
-    if (i2c_read(st->hw->addr, st->reg->raw_gyro, 6, tmp))
-        return -1;
-    data[0] = (tmp[0] << 8) | tmp[1];
-    data[1] = (tmp[2] << 8) | tmp[3];
-    data[2] = (tmp[4] << 8) | tmp[5];
-    if (timestamp)
-        get_ms(timestamp);
-    return 0;
-}
+#define mpu_get_gyro_reg(xData, xTimestamp) mpu_get_X_reg(xData, xTimestamp, INV_XYZ_GYRO,st->reg->raw_gyro)
 
 /**
  *  @brief      Read raw accel data directly from the registers.
@@ -831,14 +816,16 @@ int mpu_get_gyro_reg(short *data, unsigned long *timestamp)
  *  @param[out] timestamp   Timestamp in milliseconds. Null if not needed.
  *  @return     0 if successful.
  */
-int mpu_get_accel_reg(short *data, unsigned long *timestamp)
+#define mpu_get_accel_reg(xData, xTimestamp) mpu_get_X_reg(xData, xTimestamp, INV_XYZ_ACCEL,st->reg->raw_accel)
+
+int mpu_get_X_reg(short *data, unsigned long *timestamp, byte devMask, byte xDev)
 {
     unsigned char tmp[6];
 
-    if (!(st->chip_cfg.sensors & INV_XYZ_ACCEL))
+    if (!(st->chip_cfg.sensors & devMask))
         return -1;
 
-    if (i2c_read(st->hw->addr, st->reg->raw_accel, 6, tmp))
+    if (i2c_read(st->hw->addr, xDev, 6, tmp))
         return -1;
     data[0] = (tmp[0] << 8) | tmp[1];
     data[1] = (tmp[2] << 8) | tmp[3];

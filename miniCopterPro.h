@@ -1,6 +1,7 @@
 #ifndef _MINICOPTERPRO_H_
 #define _MINICOPTERPRO_H_ 1
 
+#include <EEPROM.h>
 #include "ioWrapper.h"
 #include "effectorsWrapper.h"
 #include "sensorsWrapper.h"
@@ -35,8 +36,8 @@ class miniCopterPro
 
 	private:
 
-		void setup();
-		void loop();
+		inline void setup();
+		inline void loop();
 		float gimbalTarget[2];
 		float patformTarget[2];
 		float rotationTarget;

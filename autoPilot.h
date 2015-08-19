@@ -17,30 +17,29 @@ enum PILOT_MODE
 #include "ioWrapper.h"
 #include "effectorsWrapper.h"
 #include "sensorsWrapper.h"
-// #include <PID_v1.h>
+#include <PID_v1.h>
 
 class autoPilot
 {
 	public:
 		void installIn(void* mcp){copterPointer = mcp;};
 		void init();
-		void initPID();
 		void doJob();
 		void setMode(PILOT_MODE newMode){workMode = newMode;}; // if(workMode!=PILOT_MODE_EMERGENCY) ??
 	private:
+		void initPID();
 		void* copterPointer;
 		PILOT_MODE workMode = PILOT_MODE_IDLE;
 		void fixGimbal();
 		void fixPlatform();
-		// PID* pidRoll;
-		// double pidRollValue = 0;
-		// PID* pidPitch;
-		// double pidPitchValue = 0;
-		// PID* pidYaw;
-		// double pidYawValue = 0;
-		// PID* pidThrotle;
-		// double pidThrotleValue = 0;
-
+		PID* pidRoll;
+		double pidRollValue = 0;
+		PID* pidPitch;
+		double pidPitchValue = 0;
+		PID* pidYaw;
+		double pidYawValue = 0;
+		PID* pidThrotle;
+		double pidThrotleValue = 0;
 };
 
 #endif

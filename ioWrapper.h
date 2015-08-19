@@ -7,19 +7,19 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h> /* For PROGMEM */
 
-#define IO_MAX_MSG_LEN 19
+#define IO_MAX_MSG_LEN 24
+#define DECIMAL_PRECISION 100
+
 /* GLOBALS !!! */
-const char ioText_ioInited[] PROGMEM = "IO init successful. Starting :D";
-const char ioText_sensorsInit[] PROGMEM = "Sensors initing ";
-const char ioText_effectorsInit[] PROGMEM = "Effectors initing ";
-const char ioText_pilotInit[] PROGMEM = "Pilot initing ";
-const char ioText_OK[] PROGMEM = "OK\n\r";
-const char ioText_ERROR[] PROGMEM = "ERROR\n\r";
-const char ioText_imuInitERROR[] PROGMEM = " IMU/DMP is ded ";
-const char ioText_barometerInitERROR[] PROGMEM = " BAROMETER is ded ";
-const char ioText_bootTimeIs[] PROGMEM = "Boot time: %d";
-const char ioText_lps[] PROGMEM = "LPS: %d";
-const char ioText_freeRamIs[] PROGMEM = "FREERAM: %d";
+const char ioText_ioInited[] PROGMEM = "IO OK";
+const char ioText_sensorsInit[] PROGMEM = "SENS";
+const char ioText_effectorsInit[] PROGMEM = "EFE";
+const char ioText_pilotInit[] PROGMEM = "PILOT";
+const char ioText_OK[] PROGMEM = " OK\n\r";
+const char ioText_ERROR[] PROGMEM = " ERROR\n\r";
+// const char ioText_imuInitERROR[] PROGMEM = " IMU/DMP is ded ";
+const char ioText_barometerInitERROR[] PROGMEM = " BAROM ERR";
+const char ioText_freeRamIs[] PROGMEM = "FR: %d";
 
 class ioWrapper
 {
@@ -48,10 +48,20 @@ class ioWrapper
 	private:
 		void* copterPointer;
 
-		char buffer[IO_MAX_MSG_LEN];
-
 		/* Operator command interpreter */
-		void runCommand(char* cmd,uint8_t len);
+		inline void runCommand(char* cmd,uint8_t len);
+
+		void sendSeparator() {IO_SERIAL_STREAM.write(',');};
+		void lineBegin() {IO_SERIAL_STREAM.write('|');};
+		void lineEnd() {IO_SERIAL_STREAM.write('\n');};
+		void writeValue(const float val){
+			static uint16_t z,f;
+			z = val;
+			f = (val*DECIMAL_PRECISION) - z*DECIMAL_PRECISION;
+			IO_SERIAL_STREAM.write(z);
+			IO_SERIAL_STREAM.write('.');
+			IO_SERIAL_STREAM.write(f);
+		};
 };
 
 #endif

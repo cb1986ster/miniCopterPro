@@ -39,10 +39,7 @@
 
 int mpu_select_device(int device);
 
-inline void get_ms(long unsigned int *timestamp)
-{
-    *timestamp = millis(); 
-}
+#define get_ms(tst) *tst = millis();
 
 //  IMU hardware device defines
 

@@ -92,7 +92,7 @@ void sensorsWrapper::batteryInit(){
 	pinMode(SENSOR_BATT_ANALOGPIN,OUTPUT);
 }
 void sensorsWrapper::batteryUpdate(){
-	batteryStatus = map(analogRead(SENSOR_BATT_ANALOGPIN), 666, 862, 0, 1000);
+	batteryStatus = map(analogRead(SENSOR_BATT_ANALOGPIN), 666, 862, 0, 1000)/1000.0f;
 }
 
 void sensorsWrapper::imuInit(){

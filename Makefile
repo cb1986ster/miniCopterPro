@@ -1,6 +1,6 @@
 PROJECT_DIR = $(CURDIR)
 USER_LIB_PATH := $(PROJECT_DIR)/lib
-ARDUINO_LIBS += I2Cdev NewPing Servo mpu SFE_BMP180 freeram PID
+ARDUINO_LIBS += I2Cdev NewPing Servo mpu SFE_BMP180 freeram PID EEPROM
 ARCHITECTURE  = avr
 BOARD_TAG = nano
 BOARD_SUB = atmega328
@@ -10,15 +10,17 @@ MONITOR_BAUDRATE = 57600
 AVRDUDE_ARD_BAUDRATE = 57600 
 MONITOR_PORT = /dev/ttyUSB0
 #-Wl,-u,vfscanf -lscanf_flt -lm 
-CXXFLAGS += -D MPU9150 -Wl,-u,vfscanf -lscanf_flt -lm 
+# CXXFLAGS += -D MPU6500 -Wl,-u,vfscanf -lscanf_flt -lm 
+CXXFLAGS += -D MPU9150 -Os
 
 #########################################################
 ## Reszty nie ruszać
-ARDUINO_DIR = /opt/arduino-1.5.7
-AVR_TOOLS_DIR = /usr
-# AVR_TOOLS_DIR = /opt/arduino-1.5.7/hardware/tools/avr
-AVRDDUDE = /usr/bin/avrdude
-# AVRDDUDE = /opt/arduino-1.5.7/hardware/tools/avr/bin/avrdude
+# AVR_TOOLS_DIR = /usr
+# AVRDDUDE = /usr/bin/avrdude
+# ARDUINO_DIR = /opt/arduino-1.5.7
+ARDUINO_DIR = /opt/arduino-1.6.5
+AVR_TOOLS_DIR = /opt/arduino-1.6.5/hardware/tools/avr
+AVRDDUDE = /opt/arduino-1.6.5/hardware/tools/avr/bin/avrdude
 ARDMK_DIR = /opt/Arduino-Makefile
 #########################################################
 ## A tego to już w szczególności

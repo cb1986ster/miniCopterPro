@@ -20,6 +20,8 @@ void miniCopterPro::setup(){
 	sensors.init();
 
 	/* connect io,sensors,effectors and run */
+	byte value = EEPROM.read(0);
+	EEPROM.write(0, value);
 	pilot.installIn(this);
 	pilot.init();
 
