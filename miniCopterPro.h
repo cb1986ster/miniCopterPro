@@ -1,7 +1,6 @@
 #ifndef _MINICOPTERPRO_H_
 #define _MINICOPTERPRO_H_ 1
 
-#include <EEPROM.h>
 #include "ioWrapper.h"
 #include "effectorsWrapper.h"
 #include "sensorsWrapper.h"

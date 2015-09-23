@@ -5,7 +5,7 @@ void miniCopterPro::fly(){
 	while(1)loop(); /* Do main loop forever */
 }
 void miniCopterPro::setup(){
-	unsigned long int initCalibrationTime = millis() + 15000;
+	unsigned long int initCalibrationTime = millis() + 13000;
 
 	/* init IO to user */
 	io.installIn(this);
@@ -20,8 +20,6 @@ void miniCopterPro::setup(){
 	sensors.init();
 
 	/* connect io,sensors,effectors and run */
-	byte value = EEPROM.read(0);
-	EEPROM.write(0, value);
 	pilot.installIn(this);
 	pilot.init();
 
@@ -34,6 +32,8 @@ void miniCopterPro::setup(){
 		sensors.calibration();
 	}
 }
+
+
 void miniCopterPro::loop(){
 	/* read/send data from/to user */
 	io.update();

@@ -21,6 +21,7 @@ class sensorsWrapper
 		void calibration();
 		float getPitch(){return pitch;};
 		float getRoll(){return roll;};
+		float getRotation(){return zRotation;};
 		double getHeight(){return (sonarAlt < 5.0 && sonarAlt > 0.0)?sonarAlt:baroAlt;};
 		double getBatteryStatus(){return batteryStatus;};
 		double* getRollPointer(){return (double*)&roll;}

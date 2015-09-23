@@ -17,6 +17,7 @@ enum PILOT_MODE
 #include "ioWrapper.h"
 #include "effectorsWrapper.h"
 #include "sensorsWrapper.h"
+#include <EEPROM.h>
 #include <PID_v1.h>
 
 class autoPilot
@@ -26,6 +27,8 @@ class autoPilot
 		void init();
 		void doJob();
 		void setMode(PILOT_MODE newMode){workMode = newMode;}; // if(workMode!=PILOT_MODE_EMERGENCY) ??
+		void saveInEEPROM(uint8_t a, uint8_t v);
+		uint8_t getEEPROM(uint8_t a);
 	private:
 		void initPID();
 		void* copterPointer;
@@ -41,5 +44,4 @@ class autoPilot
 		PID* pidThrotle;
 		double pidThrotleValue = 0;
 };
-
 #endif

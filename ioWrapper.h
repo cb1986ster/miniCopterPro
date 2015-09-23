@@ -5,21 +5,23 @@
 #define IO_SERIAL_BAUD 57600
 
 #include <Arduino.h>
-#include <avr/pgmspace.h> /* For PROGMEM */
+#include <stdlib.h>
 
 #define IO_MAX_MSG_LEN 24
-#define DECIMAL_PRECISION 100
+
+#define SERIAL_WRITE_NATIVE_FLOAT 0
+#define SERIAL_WRITE_FLOAT_IMP_NO 1
 
 /* GLOBALS !!! */
-const char ioText_ioInited[] PROGMEM = "IO OK";
-const char ioText_sensorsInit[] PROGMEM = "SENS";
-const char ioText_effectorsInit[] PROGMEM = "EFE";
-const char ioText_pilotInit[] PROGMEM = "PILOT";
-const char ioText_OK[] PROGMEM = " OK\n\r";
-const char ioText_ERROR[] PROGMEM = " ERROR\n\r";
-// const char ioText_imuInitERROR[] PROGMEM = " IMU/DMP is ded ";
-const char ioText_barometerInitERROR[] PROGMEM = " BAROM ERR";
-const char ioText_freeRamIs[] PROGMEM = "FR: %d";
+const char ioText_ioInited[] = "IO OK";
+const char ioText_sensorsInit[] = "SENS";
+const char ioText_effectorsInit[] = "EFE";
+const char ioText_pilotInit[] = "PILOT";
+const char ioText_OK[] = " OK\n\r";
+const char ioText_ERROR[] = " ERROR\n\r";
+// const char ioText_imuInitERROR[] = " IMU/DMP is ded ";
+const char ioText_barometerInitERROR[] = " BAROM ERR";
+const char ioText_freeRamIs[] = "FR: %d";
 
 class ioWrapper
 {
@@ -54,14 +56,7 @@ class ioWrapper
 		void sendSeparator() {IO_SERIAL_STREAM.write(',');};
 		void lineBegin() {IO_SERIAL_STREAM.write('|');};
 		void lineEnd() {IO_SERIAL_STREAM.write('\n');};
-		void writeValue(const float val){
-			static uint16_t z,f;
-			z = val;
-			f = (val*DECIMAL_PRECISION) - z*DECIMAL_PRECISION;
-			IO_SERIAL_STREAM.write(z);
-			IO_SERIAL_STREAM.write('.');
-			IO_SERIAL_STREAM.write(f);
-		};
+		void writeValue(float val);
 };
 
 #endif

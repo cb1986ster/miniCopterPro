@@ -3,6 +3,7 @@ import thread
 import time
 import serial
 import re
+from communication import *
 
 ioData = {
 	'output' : {
@@ -26,8 +27,11 @@ ioData = {
 }
 
 pygame.init()
-
-window = pygame.display.set_mode((800, 600)) # pygame.FULLSCREEN
+window = None
+if False:
+	window = pygame.display.set_mode((800, 600),pygame.FULLSCREEN)
+else:
+	window = pygame.display.set_mode((800, 600))
 pygame.display.set_caption('QuadCopter controll')
 background = pygame.image.load('background.png').convert()
 
@@ -42,7 +46,7 @@ def communicationInput(ser):
 	global ioData
 	while isAppRunning:
 		line = ser.readline()
-		data = re.findall(r"\<([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+)\>", line)
+		data = re.findall(r"\<([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+)\>", line)
 		if len(data) > 0:
 			ioData['input']['pitch'] = float(data[-1][0])
 			ioData['input']['roll'] = float(data[-1][1])
@@ -54,6 +58,8 @@ def communicationInput(ser):
 			ioData['input']['motors'][1] = float(data[-1][6])
 			ioData['input']['motors'][2] = float(data[-1][7])
 			ioData['input']['motors'][3] = float(data[-1][8])
+			# rotacja
+			ioData['input']['rotate'] = ioData['input']['rotate']*0.7 + float(data[-1][9])*0.3
 
 def communicationOutput(ser):
 	global isAppRunning
@@ -69,7 +75,7 @@ def communicationOutput(ser):
 		i+=1
 		if i > 25:
 			i=0
-			m = "<p%0.3f:%0.3f:%0.3f:%0.3f:%0.3f:%0.3f>"%(
+			m = "<P%0.3f:%0.3f:%0.3f:%0.3f:%0.3f:%0.3f>"%(
 				ioData['output']['roll'],
 				ioData['output']['pitch'],
 				ioData['output']['rotate'],
@@ -81,7 +87,9 @@ def communicationOutput(ser):
 			# print '          ','          ',m
 
 def getNormalalizedAxisValue(device,axisNo):
-	return float(pad.get_axis(axisNo))/2.0
+	if device != None:
+		return 0.0
+	return float(device.get_axis(axisNo))/2.0
 
 def limitTo(val,val_min=-1,val_max=1):
 	return min(val_max,max(val_min,val))
@@ -118,20 +126,18 @@ def readUserInput(events):
 		
 		# ioData['output']['gimbalRoll'] = limitTo(getNormalalizedAxisValue(pad,3))
 		# ioData['output']['gimbalPitch'] = limitTo(getNormalalizedAxisValue(pad,2))
-
-		ioData['output']['roll'] = limitTo(getNormalalizedAxisValue(pad,0))*-1
-		ioData['output']['pitch'] = limitTo(getNormalalizedAxisValue(pad,2))
-		ioData['output']['rotate'] = -limitTo(getNormalalizedAxisValue(pad,3))
 		
 		# Przyciski
 		if pad != None:
+			ioData['output']['roll'] = limitTo(getNormalalizedAxisValue(pad,0))*-1
+			ioData['output']['pitch'] = limitTo(getNormalalizedAxisValue(pad,2))
+			ioData['output']['rotate'] = -limitTo(getNormalalizedAxisValue(pad,3))
 			if pad.get_button(9): # Wyjscie z programu
 				isAppRunning = False
-
 			keys2mode = {
-				0 : 'IDLE',
-				7 : 'GIMBAL',
-				5 : 'MOTOR_TEST'
+				0 : 'I',
+				7 : 'G',
+				5 : 'T'
 			}
 			for keyNo,modeStr in keys2mode.items():
 				if pad.get_button(keyNo):
@@ -160,9 +166,9 @@ def gradGreenYellowRed(v):
 
 def renderBalance(x,y,value,target,image):
 	screen.blit(horizontBackground, (x-(horizontBackground.get_width()/2), y-(horizontBackground.get_height()/2)))
-	targetRotate = pygame.transform.rotate(horizontTarget, target * 180)
+	targetRotate = pygame.transform.rotozoom(horizontTarget, target * 180, 1)
 	screen.blit(targetRotate, (x-(targetRotate.get_width()/2), y-(targetRotate.get_height()/2)))
-	valueRotated = pygame.transform.rotate(image, value * 180)
+	valueRotated = pygame.transform.rotozoom(image, value * 180, 1)
 	screen.blit(valueRotated, (x-(valueRotated.get_width()/2), y-(valueRotated.get_height()/2)))
 	descValue = horizontFont.render("%f"%value, 1, (255,255,128))
 	descTarget = horizontFont.render("%f"%target, 1, (255,128,128))
@@ -171,9 +177,9 @@ def renderBalance(x,y,value,target,image):
 
 def renderRotate(x,y,value,target):
 	screen.blit(rotationBackground, (x-(rotationBackground.get_width()/2), y-(rotationBackground.get_height()/2)))
-	targetRotate = pygame.transform.rotate(rotationTarget, target * 180)
+	targetRotate = pygame.transform.rotozoom(rotationTarget, target * -1.0, 1)
 	screen.blit(targetRotate, (x-(targetRotate.get_width()/2), y-(targetRotate.get_height()/2)))
-	valueRotated = pygame.transform.rotate(rotationValue, value * 180)
+	valueRotated = pygame.transform.rotozoom(rotationValue, value * -1.0, 1)
 	screen.blit(valueRotated, (x-(valueRotated.get_width()/2), y-(valueRotated.get_height()/2)))
 	descValue = rotationFont.render("%f"%value, 1, (255,255,128))
 	descTarget = rotationFont.render("%f"%target, 1, (255,128,128))
@@ -190,8 +196,6 @@ def renderMotorSpeed(x,y,value):
 	pygame.draw.rect(screen,gradGreenYellowRed(value),(5+x-(msx/2),offset+5+y-(msy/2),msx-10,height),0)
 	descValue = rotationFont.render("%d%%"%(100*value), 1, (255,255,128))
 	screen.blit(descValue, (x-(descValue.get_width()/2), y+(msy/2)))
-
-
 
 def appGui():
 	global isAppRunning
@@ -220,17 +224,14 @@ def appGui():
 		pygame.display.flip()
 
 # try:
-ser = serial.Serial(
-	port='/dev/ttyUSB0',\
-	baudrate=57600,\
-	parity=serial.PARITY_NONE,\
-	stopbits=serial.STOPBITS_ONE,\
-	bytesize=serial.EIGHTBITS,\
-	timeout=None
-)
+ser = dronePort
 pygame.joystick.init()
-pad = pygame.joystick.Joystick(0)
-pad.init()
+pad = None
+try:
+	pad = pygame.joystick.Joystick(0)
+	pad.init()
+except Exception, e:
+	print "Bez padu ;("
 # except Exception, e:
 # 	print "Serial nie podlaczony!!!"
 # 	ser = None

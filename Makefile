@@ -8,11 +8,11 @@ MCU = atmega328p
 
 MONITOR_BAUDRATE = 57600
 AVRDUDE_ARD_BAUDRATE = 57600 
-MONITOR_PORT = /dev/ttyUSB0
+MONITOR_PORT = /dev/ttyUSB?
 #-Wl,-u,vfscanf -lscanf_flt -lm 
 # CXXFLAGS += -D MPU6500 -Wl,-u,vfscanf -lscanf_flt -lm 
 CXXFLAGS += -D MPU9150 -Os
-
+ARDUINO_QUIET=1
 #########################################################
 ## Reszty nie ruszać
 # AVR_TOOLS_DIR = /usr
@@ -20,7 +20,8 @@ CXXFLAGS += -D MPU9150 -Os
 # ARDUINO_DIR = /opt/arduino-1.5.7
 ARDUINO_DIR = /opt/arduino-1.6.5
 AVR_TOOLS_DIR = /opt/arduino-1.6.5/hardware/tools/avr
-AVRDDUDE = /opt/arduino-1.6.5/hardware/tools/avr/bin/avrdude
+AVRDUDE = /opt/arduino-1.6.5/hardware/tools/avr/bin/avrdude
+AVRDUDE_CONF =  /opt/arduino-1.6.5/hardware/tools/avr/etc/avrdude.conf
 ARDMK_DIR = /opt/Arduino-Makefile
 #########################################################
 ## A tego to już w szczególności
