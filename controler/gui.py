@@ -87,9 +87,10 @@ def communicationOutput(ser):
 			# print '          ','          ',m
 
 def getNormalalizedAxisValue(device,axisNo):
-	if device != None:
+	if device == None:
 		return 0.0
-	return float(device.get_axis(axisNo))/2.0
+	v = float(device.get_axis(axisNo))/2.0
+	return v
 
 def limitTo(val,val_min=-1,val_max=1):
 	return min(val_max,max(val_min,val))
@@ -97,6 +98,9 @@ def limitTo(val,val_min=-1,val_max=1):
 def readUserInput(events):
 	global isAppRunning
 	global ioData
+	global y
+	global x
+	global t
 	for event in events:
 		if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
 			isAppRunning = False
@@ -121,27 +125,29 @@ def readUserInput(events):
 		# else:
 		# 	print event
 		# y = limitTo(getNormalalizedAxisValue(pad,0))
-		
+
 		# t = limitTo(getNormalalizedAxisValue(pad,1))
-		
+
 		# ioData['output']['gimbalRoll'] = limitTo(getNormalalizedAxisValue(pad,3))
 		# ioData['output']['gimbalPitch'] = limitTo(getNormalalizedAxisValue(pad,2))
-		
+
 		# Przyciski
 		if pad != None:
-			ioData['output']['roll'] = limitTo(getNormalalizedAxisValue(pad,0))*-1
+			ioData['output']['roll'] = -limitTo(getNormalalizedAxisValue(pad,0))
 			ioData['output']['pitch'] = limitTo(getNormalalizedAxisValue(pad,2))
 			ioData['output']['rotate'] = -limitTo(getNormalalizedAxisValue(pad,3))
+			print ioData['output']['roll'], ioData['output']['pitch'],ioData['output']['rotate']
 			if pad.get_button(9): # Wyjscie z programu
 				isAppRunning = False
 			keys2mode = {
 				0 : 'I',
+				4 : 'D',
 				7 : 'G',
 				5 : 'T'
 			}
 			for keyNo,modeStr in keys2mode.items():
 				if pad.get_button(keyNo):
-					ioData['output']['msgs'].append('m%s'%modeStr)
+					ioData['output']['msgs'].append('M%s'%modeStr)
 
 rotationValue =pygame.image.load('rotation.png')
 rotationBackground =pygame.image.load('horizontBackground.png')
@@ -212,15 +218,15 @@ def appGui():
 		renderBalance(533,200,ioData['input']['pitch'],ioData['output']['pitch'],horizontPitch)
 		renderRotate(533,420,ioData['input']['rotate'],ioData['output']['rotate'])
 
-		renderMotorSpeed(30,50, ioData['input']['motors'][0])
-		renderMotorSpeed(770,520, ioData['input']['motors'][1])
-		renderMotorSpeed(770,50, ioData['input']['motors'][2])
-		renderMotorSpeed(30,520, ioData['input']['motors'][3])
+		renderMotorSpeed(30,520, ioData['input']['motors'][0])
+		renderMotorSpeed(770,50, ioData['input']['motors'][1])
+		renderMotorSpeed(770,520, ioData['input']['motors'][2])
+		renderMotorSpeed(30,50, ioData['input']['motors'][3])
 
 
 		lpsText = myfont.render("LPS: %f"%(ioData['input']['lps']*10), 1, (255,255,0))
 		screen.blit(lpsText, (200, 20))
-		
+
 		pygame.display.flip()
 
 # try:

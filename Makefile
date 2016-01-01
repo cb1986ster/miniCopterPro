@@ -5,12 +5,14 @@ ARCHITECTURE  = avr
 BOARD_TAG = nano
 BOARD_SUB = atmega328
 MCU = atmega328p
+RESET_CMD=python controler/remoteReset.py
 
 MONITOR_BAUDRATE = 57600
-AVRDUDE_ARD_BAUDRATE = 57600 
-MONITOR_PORT = /dev/ttyUSB?
-#-Wl,-u,vfscanf -lscanf_flt -lm 
-# CXXFLAGS += -D MPU6500 -Wl,-u,vfscanf -lscanf_flt -lm 
+AVRDUDE_ARD_BAUDRATE = 57600
+# MONITOR_PORT = /dev/ttyUSB?
+MONITOR_PORT = /dev/rfcomm0
+#-Wl,-u,vfscanf -lscanf_flt -lm
+# CXXFLAGS += -D MPU6500 -Wl,-u,vfscanf -lscanf_flt -lm
 CXXFLAGS += -D MPU9150 -Os
 ARDUINO_QUIET=1
 #########################################################

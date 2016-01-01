@@ -2,12 +2,23 @@
 
 #include "miniCopterPro.h"
 
+
+void watchDog::reset(){
+	((miniCopterPro*)copterPointer)->setPlatformTarget(0,0);
+	((miniCopterPro*)copterPointer)->setPlatformTarget(1,0);
+	((miniCopterPro*)copterPointer)->setRotationTarget(0);
+	((miniCopterPro*)copterPointer)->setAltChangeTarget(0);
+	((miniCopterPro*)copterPointer)->setGimbalTarget(0 , 1);
+	((miniCopterPro*)copterPointer)->setGimbalTarget(1 , 0);
+}
+
+
 watchDog::watchDog(){
 	lastTimer = millis();
 }
 void watchDog::initDone(){
 	tmNow = millis();
-#ifdef _WATCHDOG_FEATURE_FREERAM 
+#ifdef _WATCHDOG_FEATURE_FREERAM
 	((miniCopterPro*)copterPointer)->io.sendMesg(ioText_freeRamIs,freeRam());
 #endif
 	lps = 0;
@@ -27,7 +38,7 @@ void watchDog::check(){
 	/* Report lps */
 	if(tmNow > lpsTimer){
 		((miniCopterPro*)copterPointer)->io.sendStatus();
-		lpsTimer = tmNow + 100;	
+		lpsTimer = tmNow + 100;
 		lps = 0;
 #ifdef _WATCHDOG_FEATURE_BATTERY_LOW_AUTO_LANDING
 		// lowpass battery voltage value
@@ -41,6 +52,6 @@ void watchDog::check(){
 			((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_EMERGENCY);
 		}
 #endif
-	} 
+	}
 	lps++;
 }

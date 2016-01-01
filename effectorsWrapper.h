@@ -11,9 +11,9 @@
 #include "ioWrapper.h"
 
 #define EFFECTORS_MOTOR_NO 4
-#define EFFECTORS_GIMBAL_NO 4
+#define EFFECTORS_GIMBAL_NO 2
 
-#define EFFECTORS_MOTOR_MAX_VALUE 96
+#define EFFECTORS_MOTOR_MAX_VALUE 60
 #define EFFECTORS_MOTOR_MIN_VALUE 3
 
 class effectorsWrapper
@@ -21,8 +21,9 @@ class effectorsWrapper
 	public:
 		void installIn(void* mcp){copterPointer = mcp;};
 		void init();
-		void update();	
+		void update();
 		void setMotorSpeed(uint8_t motorNo, float newSpeed){motorsSpeed[motorNo] = newSpeed;};
+		void stopMotors();
 		void setGimbalArc(uint8_t motorNo, float newArc){gimbalArc[motorNo] = newArc;};
 		float getMotorSpeed(uint8_t motorNo){return constrain((int)(motorsSpeed[motorNo]*180.0),EFFECTORS_MOTOR_MIN_VALUE,EFFECTORS_MOTOR_MAX_VALUE);}
 
@@ -38,7 +39,7 @@ class effectorsWrapper
 
 		/* Gimbal */
 		float gimbalArc[EFFECTORS_GIMBAL_NO];
-		Servo gimbal[EFFECTORS_GIMBAL_NO];	
+		Servo gimbal[EFFECTORS_GIMBAL_NO];
 		inline void gimbalInit();
 		void gimbalUpdate();
 };

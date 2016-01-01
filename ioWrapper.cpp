@@ -170,9 +170,29 @@ void ioWrapper::sendMesgNoStart(const char* msg){
 void ioWrapper::runCommand(char* cmd,uint8_t len){
 	static float tempFloat[6]={0,0,0,0,0,0};
 	static uint8_t i,pos_b,pos_e;
-	// IO_SERIAL_STREAM.print('@');
-	// IO_SERIAL_STREAM.println(cmd);
 	switch(cmd[0]){
+		case 'R': /* GetParams */
+			pos_b = 1;
+			pos_e = 2;
+			cmd[len] = ':';
+			for(i=0;i<6;){
+				if(cmd[pos_e]==':'){
+					cmd[pos_e] = 0;
+					tempFloat[i] = my_atof(cmd+pos_b);
+					pos_b = pos_e+1;
+					pos_e = pos_b+1;
+					i++;
+				} else
+					pos_e++;
+			}
+			((miniCopterPro*)copterPointer)->setPlatformTarget(0,tempFloat[0]);
+			((miniCopterPro*)copterPointer)->setPlatformTarget(1,tempFloat[1]);
+			((miniCopterPro*)copterPointer)->setRotationTarget(tempFloat[2]);
+			((miniCopterPro*)copterPointer)->setAltChangeTarget(tempFloat[3]);
+
+			((miniCopterPro*)copterPointer)->setGimbalTarget(0 , tempFloat[4]);
+			((miniCopterPro*)copterPointer)->setGimbalTarget(1 , tempFloat[5]);
+			break;
 		case 'P': /* GetParams */
 			pos_b = 1;
 			pos_e = 2;
@@ -180,7 +200,7 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 			for(i=0;i<6;){
 				if(cmd[pos_e]==':'){
 					cmd[pos_e] = 0;
-					tempFloat[i] = my_atof(cmd+pos_b);					
+					tempFloat[i] = my_atof(cmd+pos_b);
 					pos_b = pos_e+1;
 					pos_e = pos_b+1;
 					i++;
@@ -204,7 +224,7 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 					for(i=0;i<2;){
 						if(cmd[pos_e]==':'){
 							cmd[pos_e] = 0;
-							tempFloat[i] = my_atof(cmd+pos_b);					
+							tempFloat[i] = my_atof(cmd+pos_b);
 							pos_b = pos_e+1;
 							pos_e = pos_b+1;
 							i++;
@@ -212,7 +232,7 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 							pos_e++;
 					}
 					((miniCopterPro*)copterPointer)->pilot.saveInEEPROM(int(tempFloat[0]),int(tempFloat[1]));
-					break; 
+					break;
 				case 'O':
 					pos_b = my_atof(cmd+2);
 					pos_e = ((miniCopterPro*)copterPointer)->pilot.getEEPROM(pos_b);
@@ -228,6 +248,10 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 			break;
 		case 'M':
 			switch(cmd[1]){
+				case 'R': // DANGER!!!
+					if(cmd[2]=='E' && cmd[3]=='S' && cmd[4]=='E' && cmd[5]=='E')
+						((miniCopterPro*)copterPointer)->wd.reset();
+					break;
 				case 'I':
 					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_IDLE);
 					break;
@@ -248,6 +272,9 @@ void ioWrapper::runCommand(char* cmd,uint8_t len){
 					break;
 				case 'F':
 					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_FLY);
+					break;
+				case 'D': // Dance mode
+					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_DANCE);
 					break;
 			}
 			break;
@@ -270,7 +297,7 @@ void ioWrapper::update(){
 			} else {
 				if(inBuffPos >= inBuffMaxLen)
 					inBuffPos = 0;
-				else 	
+				else
 					inBuffPos++;
 			}
 		}
