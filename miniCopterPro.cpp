@@ -1,9 +1,5 @@
 #include "miniCopterPro.h"
 
-void miniCopterPro::fly(){
-	setup(); /* Init all stuff */
-	while(1)loop(); /* Do main loop forever */
-}
 void miniCopterPro::setup(){
 	unsigned long int initCalibrationTime = millis() + 13000;
 
@@ -14,7 +10,7 @@ void miniCopterPro::setup(){
 	/* connect io and run */
 	effectors.installIn(this);
 	effectors.init();
-	
+
 	/* connect io and run */
 	sensors.installIn(this);
 	sensors.init();

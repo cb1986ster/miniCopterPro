@@ -46,17 +46,10 @@ class ioWrapper
 		void installIn(void* mcp){copterPointer = mcp;};
 		/* Send copter status */
 		void sendStatus();
-		
+
 	private:
 		void* copterPointer;
-
 		/* Operator command interpreter */
 		inline void runCommand(char* cmd,uint8_t len);
-
-		void sendSeparator() {IO_SERIAL_STREAM.write(',');};
-		void lineBegin() {IO_SERIAL_STREAM.write('|');};
-		void lineEnd() {IO_SERIAL_STREAM.write('\n');};
-		void writeValue(float val);
 };
-
 #endif

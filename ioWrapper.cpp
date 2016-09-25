@@ -4,49 +4,36 @@
 #include "autoPilot.h"
 #include <ctype.h>
 
-#include <ctype.h>
+#include "my_atof.c"
 
-float my_atof(char *s)
-{
-	float f = 0.0, fd = 0.0, d = 0.0;
-	int fe = 0;
-	char negative = 0;
+#define copter ((miniCopterPro*)copterPointer)
 
-	while (isspace(*s) && *s != 0)
-		s++;
-
-	if (*s == '+')
-		s++;
-
-	if (*s == '-') {
-		s++;
-		negative = 1;
+// Helpers
+void sendSeparator() {IO_SERIAL_STREAM.write(',');};
+void lineBegin() {IO_SERIAL_STREAM.write('|');};
+void lineEnd() {IO_SERIAL_STREAM.write('\n');};
+void unpackFloats(char* str,int pos_b,int pos_e,int len,float target[],int slen){
+	static uint8_t i=0;
+	str[slen] = ':';
+	for(i=0;i<len;){
+		if(str[pos_e]==':'){
+			str[pos_e] = 0;
+			target[i] = my_atof(str+pos_b);
+			pos_b = pos_e+1;
+			pos_e = pos_b+1;
+			i++;
+		} else
+			pos_e++;
 	}
-
-	while (isdigit(*s) && *s != 0) {
-		f  *= 10;
-		f += (*s - '0');
-		s++;
-	}
-	if (*s == '.') {
-		s++;
-		d = 1.0;
-		while (isdigit(*s) && *s != 0) {
-			fd *= 10;
-			d *= 10;
-			fd += (*s - '0');
-			s++;
-		}
-		fd /= d;
-	}
-
-	f += fd;
-	if (negative)
-		f = -f;
-
-	return f;
 }
-void ioWrapper::writeValue(float val){
+// void my_itoa_10(int z,char *buffer){
+// 	uint32_t p=1000000;
+// 	for(;z/p==0;p/=10); // looking for row
+// 	for(;p!=1;p/=10,buffer++)*buffer='0'+((z/p)%10);
+// 	*(buffer+1)=0; // terminator
+// }
+
+void writeValue(float val){
 #if SERIAL_WRITE_NATIVE_FLOAT
 	static char buffer[16];
 	dtostrf(val,1,3,buffer);
@@ -114,28 +101,28 @@ void ioWrapper::writeValue(float val){
 	#endif
 #endif
 };
+// implem
 void ioWrapper::sendStatus(){
 	IO_SERIAL_STREAM.write('<');
-	writeValue( ((miniCopterPro*)copterPointer)->sensors.getPitch());
+	writeValue( copter->sensors.getPitch());
 	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->sensors.getRoll());
+	writeValue( copter->sensors.getRoll());
 	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->wd.getLPS());
+	writeValue( copter->wd.getLPS());
 	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->getGimbalTarget(0));
+	writeValue( copter->effectors.getMotorSpeed(0));
 	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->getGimbalTarget(1));
+	writeValue( copter->effectors.getMotorSpeed(1));
+	sendSeparator();
+	writeValue( copter->effectors.getMotorSpeed(2));
+	sendSeparator();
+	writeValue( copter->effectors.getMotorSpeed(3));
 
 	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(0));
+	writeValue( copter->sensors.getRotation());
+
 	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(1));
-	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(2));
-	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->effectors.getMotorSpeed(3));
-	sendSeparator();
-	writeValue( ((miniCopterPro*)copterPointer)->sensors.getRotation());
+	writeValue( copter->sensors.getBatteryStatus());
 
 	IO_SERIAL_STREAM.write('>');
 	lineEnd();
@@ -169,112 +156,69 @@ void ioWrapper::sendMesgNoStart(const char* msg){
 }
 void ioWrapper::runCommand(char* cmd,uint8_t len){
 	static float tempFloat[6]={0,0,0,0,0,0};
-	static uint8_t i,pos_b,pos_e;
+	static uint8_t i;
 	switch(cmd[0]){
-		case 'R': /* GetParams */
-			pos_b = 1;
-			pos_e = 2;
-			cmd[len] = ':';
-			for(i=0;i<6;){
-				if(cmd[pos_e]==':'){
-					cmd[pos_e] = 0;
-					tempFloat[i] = my_atof(cmd+pos_b);
-					pos_b = pos_e+1;
-					pos_e = pos_b+1;
-					i++;
-				} else
-					pos_e++;
-			}
-			((miniCopterPro*)copterPointer)->setPlatformTarget(0,tempFloat[0]);
-			((miniCopterPro*)copterPointer)->setPlatformTarget(1,tempFloat[1]);
-			((miniCopterPro*)copterPointer)->setRotationTarget(tempFloat[2]);
-			((miniCopterPro*)copterPointer)->setAltChangeTarget(tempFloat[3]);
-
-			((miniCopterPro*)copterPointer)->setGimbalTarget(0 , tempFloat[4]);
-			((miniCopterPro*)copterPointer)->setGimbalTarget(1 , tempFloat[5]);
+		case 'T': /* GetParams */ // PID tunning
+			unpackFloats(cmd,1,2,4,tempFloat,len);
+			copter->pilot.tunePID(tempFloat[0],(double*)(tempFloat+1));
 			break;
-		case 'P': /* GetParams */
-			pos_b = 1;
-			pos_e = 2;
-			cmd[len] = ':';
-			for(i=0;i<6;){
-				if(cmd[pos_e]==':'){
-					cmd[pos_e] = 0;
-					tempFloat[i] = my_atof(cmd+pos_b);
-					pos_b = pos_e+1;
-					pos_e = pos_b+1;
-					i++;
-				} else
-					pos_e++;
-			}
-			((miniCopterPro*)copterPointer)->setPlatformTarget(0,tempFloat[0]);
-			((miniCopterPro*)copterPointer)->setPlatformTarget(1,tempFloat[1]);
-			((miniCopterPro*)copterPointer)->setRotationTarget(tempFloat[2]);
-			((miniCopterPro*)copterPointer)->setAltChangeTarget(tempFloat[3]);
+		case 'P': /* GetParams */ // Fly params - roll, yaw, pitch ect
+			unpackFloats(cmd,1,2,6,tempFloat,len);
+			copter->setPlatformTarget(0,tempFloat[0]);
+			copter->setPlatformTarget(1,tempFloat[1]);
+			copter->setRotationTarget(tempFloat[2]);
+			copter->setAltChangeTarget(tempFloat[3]);
 
-			((miniCopterPro*)copterPointer)->setGimbalTarget(0 , tempFloat[4]);
-			((miniCopterPro*)copterPointer)->setGimbalTarget(1 , tempFloat[5]);
+			copter->setGimbalTarget(0 , tempFloat[4]);
+			copter->setGimbalTarget(1 , tempFloat[5]);
 			break;
-		case 'E': /* GetParams */
+		case 'E': /* GetParams */ // Recive eeprom related message
 			switch(cmd[1]){
-				case 'I':
-					pos_b = 2;
-					pos_e = 3;
-					cmd[len] = ':';
-					for(i=0;i<2;){
-						if(cmd[pos_e]==':'){
-							cmd[pos_e] = 0;
-							tempFloat[i] = my_atof(cmd+pos_b);
-							pos_b = pos_e+1;
-							pos_e = pos_b+1;
-							i++;
-						} else
-							pos_e++;
-					}
-					((miniCopterPro*)copterPointer)->pilot.saveInEEPROM(int(tempFloat[0]),int(tempFloat[1]));
+				case 'I': // Write something
+					unpackFloats(cmd,2,3,2,tempFloat,len);
+					copter->pilot.saveInEEPROM(int(tempFloat[0]),int(tempFloat[1]));
 					break;
-				case 'O':
-					pos_b = my_atof(cmd+2);
-					pos_e = ((miniCopterPro*)copterPointer)->pilot.getEEPROM(pos_b);
+				case 'O': // Read something
+					i = my_atof(cmd+2);
 					IO_SERIAL_STREAM.write('<');
 					IO_SERIAL_STREAM.write('E');
-					writeValue(pos_b);
+					writeValue(i);
 					sendSeparator();
-					writeValue(pos_e);
+					i = copter->pilot.getEEPROM(i);
+					writeValue(i);
 					IO_SERIAL_STREAM.write('>');
 					lineEnd();
 					break;
 			}
 			break;
-		case 'M':
+		case 'M': // Recive simple message - no params
 			switch(cmd[1]){
 				case 'R': // DANGER!!!
-					if(cmd[2]=='E' && cmd[3]=='S' && cmd[4]=='E' && cmd[5]=='E')
-						((miniCopterPro*)copterPointer)->wd.reset();
+					copter->wd.reset();
 					break;
 				case 'I':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_IDLE);
+					copter->pilot.setMode(PILOT_MODE_IDLE);
 					break;
 				case 'G':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
+					copter->pilot.setMode(PILOT_MODE_GIMBAL_RUN);
 					break;
 				case 'T':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_MOTOR_TEST);
+					copter->pilot.setMode(PILOT_MODE_MOTOR_TEST);
 					break;
 				case 'L':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_LANDING);
+					copter->pilot.setMode(PILOT_MODE_LANDING);
 					break;
 				case 'S':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_START);
+					copter->pilot.setMode(PILOT_MODE_START);
 					break;
 				case 'H':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_STABLISATION);
+					copter->pilot.setMode(PILOT_MODE_STABLISATION);
 					break;
 				case 'F':
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_FLY);
+					copter->pilot.setMode(PILOT_MODE_FLY);
 					break;
 				case 'D': // Dance mode
-					((miniCopterPro*)copterPointer)->pilot.setMode(PILOT_MODE_DANCE);
+					copter->pilot.setMode(PILOT_MODE_DANCE);
 					break;
 			}
 			break;
@@ -286,9 +230,8 @@ void ioWrapper::update(){
 	static uint8_t inBuffPos=0;
 	while(IO_SERIAL_STREAM.available()){
 		inBuff[inBuffPos] = IO_SERIAL_STREAM.read();
-		if(inBuffPos==0){
-			if(inBuff[inBuffPos]=='<')
-				inBuffPos++;
+		if(inBuffPos==0 && inBuff[inBuffPos]=='<'){
+			inBuffPos++;
 		} else {
 			if(inBuff[inBuffPos] == '>'){
 				inBuff[inBuffPos] = '\0';

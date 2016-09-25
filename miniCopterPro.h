@@ -10,12 +10,14 @@
 class miniCopterPro
 {
 	public:
-		void fly();	
-		ioWrapper io;
-		sensorsWrapper sensors;
-		effectorsWrapper effectors;
-		autoPilot pilot;
-		watchDog wd;
+		void setup();
+		void loop();
+		ioWrapper               io; // Communication
+		sensorsWrapper     sensors; // Sensors
+		effectorsWrapper effectors; // Motors, gimball ect
+		autoPilot            pilot; // Brain
+		watchDog                wd; // WatchDog
+
 		void setGimbalTarget(uint8_t aixs,float target){gimbalTarget[aixs] = target;};
 		float getGimbalTarget(uint8_t aixs){return gimbalTarget[aixs];};
 
@@ -28,19 +30,15 @@ class miniCopterPro
 		double* getYawTargetPointer(){return (double*)&rotationTarget;}
 		double* getAltChangeTargetPointer(){return (double*)&altChangeTarget;}
 
-		double getRollTarget(){return patformTarget[0];}
-		double getPitchTarget(){return patformTarget[1];}
+		double getRollTarget(){return *(patformTarget);}
+		double getPitchTarget(){return *(patformTarget+1);}
 		double getYawTarget(){return rotationTarget;}
 		double getAltChangeTarget(){return altChangeTarget;}
 
 	private:
-
-		inline void setup();
-		inline void loop();
 		float gimbalTarget[2];
 		float patformTarget[2];
 		float rotationTarget;
 		float altChangeTarget;
 };
-
 #endif

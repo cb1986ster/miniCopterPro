@@ -15,6 +15,15 @@ enum PILOT_MODE
 	PILOT_MODE_DANCE
 };
 
+enum CPID
+{
+	CPID_ROLL,
+	CPID_PITCH,
+	CPID_ROT,
+	CPID_THROTLE,
+	CPID_ALL_NO
+};
+
 #include "ioWrapper.h"
 #include "effectorsWrapper.h"
 #include "sensorsWrapper.h"
@@ -28,21 +37,17 @@ class autoPilot
 		void init();
 		void doJob();
 		void setMode(PILOT_MODE newMode){workMode = newMode;}; // if(workMode!=PILOT_MODE_EMERGENCY) ??
-		void saveInEEPROM(uint8_t a, uint8_t v);
-		uint8_t getEEPROM(uint8_t a);
-	private:
+		void saveInEEPROM(uint8_t a, uint8_t v){EEPROM.write(a,v);};
+		uint8_t getEEPROM(uint8_t a){return EEPROM.read(a);};
 		void initPID();
+		void tunePID(int pidNo,double* pidK);
+	private:
 		void* copterPointer;
-		PILOT_MODE workMode = PILOT_MODE_IDLE;
+		PILOT_MODE workMode;
 		void fixGimbal();
 		void fixPlatform();
-		PID* pidRoll;
-		double pidRollValue = 0;
-		PID* pidPitch;
-		double pidPitchValue = 0;
-		PID* pidYaw;
-		double pidYawValue = 0;
-		PID* pidThrotle;
-		double pidThrotleValue = 0;
+		double* pidDataPointers[4][2];
+		PID *pids[CPID_ALL_NO]={0,0,0,0};
+		double pidsOut[CPID_ALL_NO];
 };
 #endif

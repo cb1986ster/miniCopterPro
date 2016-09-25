@@ -1,11 +1,12 @@
 PROJECT_DIR = $(CURDIR)
 USER_LIB_PATH := $(PROJECT_DIR)/lib
-ARDUINO_LIBS += I2Cdev NewPing Servo mpu SFE_BMP180 freeram PID EEPROM
+# ARDUINO_LIBS += I2Cdev NewPing Servo mpu SFE_BMP180 freeram PID EEPROM Adafruit_NeoPixel
+ARDUINO_LIBS += I2Cdev NewPing mpu SFE_BMP180 freeram PID EEPROM Servo
 ARCHITECTURE  = avr
 BOARD_TAG = nano
 BOARD_SUB = atmega328
 MCU = atmega328p
-RESET_CMD=python controler/remoteReset.py
+# RESET_CMD=python controler/remoteReset.py
 
 MONITOR_BAUDRATE = 57600
 AVRDUDE_ARD_BAUDRATE = 57600

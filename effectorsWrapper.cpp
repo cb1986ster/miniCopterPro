@@ -18,6 +18,9 @@ void effectorsWrapper::init(){
 
 	gimbalInit();
 	motorInit();
+#ifdef USE_SOFTWARE_SERVO_CONTROL
+	SoftwareServo::refresh();
+#endif
 
 	/* All done */
 	((miniCopterPro*)copterPointer)->io.sendMesgNoStart(ioText_OK);
@@ -26,11 +29,19 @@ void effectorsWrapper::init(){
 void effectorsWrapper::update(){
 	gimbalUpdate();
 	motorsUpdate();
+#ifdef USE_SOFTWARE_SERVO_CONTROL
+	SoftwareServo::refresh();
+#endif
 }
 
 void effectorsWrapper::gimbalInit(){
+#ifdef USE_SOFTWARE_SERVO_CONTROL
+	gimbal[0].attach(10);
+	gimbal[1].attach(11);
+#else
 	gimbal[0].attach(10,670,1830);
 	gimbal[1].attach(11,670,1830);
+#endif
 	setGimbalArc(0,0);
 	setGimbalArc(1,0);
 	gimbalUpdate();
@@ -46,10 +57,17 @@ void effectorsWrapper::gimbalUpdate(){
 }
 
 void effectorsWrapper::motorInit(){
+#ifdef USE_SOFTWARE_SERVO_CONTROL
+	motor[0].attach(9);
+	motor[1].attach(6);
+	motor[2].attach(5);
+	motor[3].attach(3);
+#else
 	motor[0].attach(9,700,2000);
 	motor[1].attach(6,700,2000);
 	motor[2].attach(5,700,2000);
 	motor[3].attach(3,700,2000);
+#endif
 	setMotorSpeed(0,0);
 	setMotorSpeed(1,0);
 	setMotorSpeed(2,0);

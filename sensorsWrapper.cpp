@@ -15,7 +15,7 @@ void sensorsWrapper::baroUpdate(){
 				} // TODO: WatchDog!!!
 			break;
 		case 1: // Oczekiwanie na zakończenie pomiaru temperatury
-				if(millis() > dtime){// Ok - temperatutra zmierzona 
+				if(millis() > dtime){// Ok - temperatutra zmierzona
 					status = pressure.getTemperature(temperatureValue);
 					if (status == 0){
 						// TODO: callWatchDog!!!
@@ -37,20 +37,20 @@ void sensorsWrapper::baroUpdate(){
 					if (pressure.getPressure(pressureValue,temperatureValue)){
 						baroAlt = pressure.altitude(pressureValue,baselinePressureValue);
 					}
-					// else callWatchDog!!!	
-					mode = 0; 
+					// else callWatchDog!!!
+					mode = 0;
 				}
 			break;
 	}
 };
 void sensorsWrapper::baroInit(){
 	if (pressure.begin()){
-		baselinePressureValue = getPressure();	
+		baselinePressureValue = getPressure();
 		baroUpdate();
 	} else {
 		((miniCopterPro*)copterPointer)->io.sendMesgNoStart(ioText_barometerInitERROR);
 		((miniCopterPro*)copterPointer)->io.triggerCriticalError();
-	}	
+	}
 };
 
 double sensorsWrapper::getPressure(){
@@ -89,16 +89,19 @@ void sensorsWrapper::sonarUpdate(){
 };
 
 void sensorsWrapper::batteryInit(){
-	pinMode(SENSOR_BATT_ANALOGPIN,OUTPUT);
+	pinMode(SENSOR_BATT_ANALOGPIN,INPUT);
 }
 void sensorsWrapper::batteryUpdate(){
-	batteryStatus = map(analogRead(SENSOR_BATT_ANALOGPIN), 666, 862, 0, 1000)/1000.0f;
+	batteryStatus = map(analogRead(SENSOR_BATT_ANALOGPIN), 614, 962, 0, 1000) / 1000.0f;
+	// if(batteryStatus>1)batteryStatus=1;
+	if(batteryStatus<0)batteryStatus=0;
+	// batteryStatus /= 1000.0f;
+	// batteryStatus = 0.5;
 }
 
 void sensorsWrapper::imuInit(){
 	mympu_open(0,200,172);//136
 }
-
 
 void sensorsWrapper::imuUpdate(){
 	if(mympu_update() == 0){/* TODO: ograniczyć liczbę obliczeń funkcji mympu_update() */
@@ -125,8 +128,9 @@ void sensorsWrapper::init(){
 }
 void sensorsWrapper::update(){
 	static uint8_t updateNo = 0;
+	// if(updateNo%100==0)
 	if(updateNo%100==0)batteryUpdate();
-	if(updateNo%21 ==0)sonarUpdate();
+	if(updateNo%21==0)sonarUpdate();
 	baroUpdate();
 	imuUpdate();
 	updateNo++;

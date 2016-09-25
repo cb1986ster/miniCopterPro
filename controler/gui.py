@@ -13,7 +13,8 @@ ioData = {
 		'rotate':0.0,
 		'gimbalRoll':0.0,
 		'gimbalPitch':0.0,
-		'msgs':[]
+		'msgs':[],
+		'params':[]
 	},
 	'input' : {
 		'roll':0.0,
@@ -22,13 +23,25 @@ ioData = {
 		'lps':0.0,
 		'gimbalRoll':0.0,
 		'gimbalPitch':0.0,
+		'battery': 0.0,
 		'motors':[ 0.0, 0.0, 0.0, 0.0]
 	}
 }
-
 pygame.init()
+try:
+	pygame.display.init()
+	found = True
+except pygame.error:
+	for driver in  ['fbcon', 'directfb', 'svgalib','x11']:
+		os.putenv('SDL_VIDEODRIVER', driver)
+		try: pygame.display.init()
+		except pygame.error: continue
+		found = True
+		break
+if not found: raise Exception('No suitable video driver found!')
+#pygame.init()
 window = None
-if False:
+if True:
 	window = pygame.display.set_mode((800, 600),pygame.FULLSCREEN)
 else:
 	window = pygame.display.set_mode((800, 600))
@@ -46,20 +59,22 @@ def communicationInput(ser):
 	global ioData
 	while isAppRunning:
 		line = ser.readline()
-		data = re.findall(r"\<([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+),([-+]?\d*\.\d+|\d+)\>", line)
+		data = re.findall(r"\<"+','.join(['([-+]?\d*\.\d+|\d+)']*9)+"\>", line)
 		if len(data) > 0:
 			ioData['input']['pitch'] = float(data[-1][0])
 			ioData['input']['roll'] = float(data[-1][1])
 			ioData['input']['lps'] = ioData['input']['lps']*0.9 + float(data[-1][2])*0.1
-			ioData['input']['gimbalRoll'] = float(data[-1][3])
-			ioData['input']['gimbalPitch'] = float(data[-1][4])
+			# ioData['input']['gimbalRoll'] = float(data[-1][3])
+			# ioData['input']['gimbalPitch'] = float(data[-1][4])
 			# motors
-			ioData['input']['motors'][0] = float(data[-1][5])
-			ioData['input']['motors'][1] = float(data[-1][6])
-			ioData['input']['motors'][2] = float(data[-1][7])
-			ioData['input']['motors'][3] = float(data[-1][8])
+			ioData['input']['motors'][0] = float(data[-1][3])
+			ioData['input']['motors'][1] = float(data[-1][4])
+			ioData['input']['motors'][2] = float(data[-1][5])
+			ioData['input']['motors'][3] = float(data[-1][6])
 			# rotacja
-			ioData['input']['rotate'] = ioData['input']['rotate']*0.7 + float(data[-1][9])*0.3
+			ioData['input']['rotate'] = ioData['input']['rotate']*0.7 + float(data[-1][7])*0.3
+			# bateria
+			ioData['input']['battery'] = float(data[-1][8])
 
 def communicationOutput(ser):
 	global isAppRunning
@@ -71,6 +86,11 @@ def communicationOutput(ser):
 			m = ioData['output']['msgs'].pop()
 			ser.write("<%s>"%m)
 			print '                  sending: %s'%m
+		while len(ioData['output']['params']) > 0:
+			m = ioData['output']['params'].pop()
+			print m
+			sys.stderr.write('              params send: %s\n'%ser.paramsSend(m[0],m[1]))
+			sys.stderr.flush()
 
 		i+=1
 		if i > 25:
@@ -85,6 +105,7 @@ def communicationOutput(ser):
 			)
 			ser.write(m)
 			# print '          ','          ',m
+	ser.msgSend('I')
 
 def getNormalalizedAxisValue(device,axisNo):
 	if device == None:
@@ -95,12 +116,16 @@ def getNormalalizedAxisValue(device,axisNo):
 def limitTo(val,val_min=-1,val_max=1):
 	return min(val_max,max(val_min,val))
 
+pidParam = [1.0, 0.0, 0.0, 0.0]
+ioData['output']['params'].append(('T',pidParam[:]))
+
 def readUserInput(events):
 	global isAppRunning
 	global ioData
 	global y
 	global x
 	global t
+	global pidParam
 	for event in events:
 		if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
 			isAppRunning = False
@@ -113,6 +138,43 @@ def readUserInput(events):
 				ioData['output']['gimbalRoll'] = limitTo(ioData['output']['gimbalRoll'] + 0.1)
 			elif event.value[0] == -1:
 				ioData['output']['gimbalRoll'] = limitTo(ioData['output']['gimbalRoll'] - 0.1)
+		# PidTune
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+			pidParam[1]+=0.001
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+			pidParam[2]+=0.001
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+			pidParam[3]+=0.001
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+			pidParam[1]+=0.05
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+			pidParam[2]+=0.05
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_3:
+			pidParam[3]+=0.05
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+			pidParam[1]-=0.001
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+			pidParam[2]-=0.001
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+			pidParam[3]-=0.001
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_z:
+			pidParam[1]-=0.05
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
+			pidParam[2]-=0.05
+			ioData['output']['params'].append(('T',pidParam[:]))
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+			pidParam[3]-=0.05
+			ioData['output']['params'].append(('T',pidParam[:]))
 		# For debug
 		# elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
 		# 	ioData['input']['pitch'] = limitTo(ioData['input']['pitch'] + 0.01)
@@ -132,33 +194,37 @@ def readUserInput(events):
 		# ioData['output']['gimbalPitch'] = limitTo(getNormalalizedAxisValue(pad,2))
 
 		# Przyciski
-		if pad != None:
-			ioData['output']['roll'] = -limitTo(getNormalalizedAxisValue(pad,0))
-			ioData['output']['pitch'] = limitTo(getNormalalizedAxisValue(pad,2))
-			ioData['output']['rotate'] = -limitTo(getNormalalizedAxisValue(pad,3))
-			print ioData['output']['roll'], ioData['output']['pitch'],ioData['output']['rotate']
-			if pad.get_button(9): # Wyjscie z programu
-				isAppRunning = False
-			keys2mode = {
-				0 : 'I',
-				4 : 'D',
-				7 : 'G',
-				5 : 'T'
-			}
-			for keyNo,modeStr in keys2mode.items():
-				if pad.get_button(keyNo):
-					ioData['output']['msgs'].append('M%s'%modeStr)
+	if pad != None:
+		ioData['output']['roll'] = -limitTo(getNormalalizedAxisValue(pad,0))
+		ioData['output']['pitch'] = limitTo(getNormalalizedAxisValue(pad,2))
+		ioData['output']['rotate'] = -limitTo(getNormalalizedAxisValue(pad,3))
+		# print ioData['output']['roll'], ioData['output']['pitch'],ioData['output']['rotate']
+		if pad.get_button(9): # Wyjscie z programu
+			isAppRunning = False
+
+		keys2mode = {
+			0 : 'I', # Idle
+			1 : 'G', # Gimbal test
+			2 : 'T', # Motor test
+			3 : 'F'  # Fly
+		}
+		ioData['output']['alt'] = limitTo(ioData['output']['alt'] - getNormalalizedAxisValue(pad,1)*0.002,0,1)
+		if pad.get_button(10):
+			ioData['output']['alt'] = 0.0
+		for keyNo,modeStr in keys2mode.items():
+			if pad.get_button(keyNo):
+				ioData['output']['msgs'].append('M%s'%modeStr)
 
 rotationValue =pygame.image.load('rotation.png')
 rotationBackground =pygame.image.load('horizontBackground.png')
 rotationTarget =pygame.image.load('rotationTarget.png')
-rotationFont = pygame.font.SysFont("monospace", 15)
+rotationFont = pygame.font.SysFont("arial", 15)
 
 horizontRoll = pygame.image.load('horizontRoll.png')
 horizontPitch =pygame.image.load('horizontPitch.png')
 horizontBackground =pygame.image.load('horizontBackground.png')
 horizontTarget =pygame.image.load('horizontTarget.png')
-horizontFont = pygame.font.SysFont("monospace", 15)
+horizontFont = pygame.font.SysFont("arial", 15)
 
 
 def gradGreenYellowRed(v):
@@ -168,6 +234,8 @@ def gradGreenYellowRed(v):
 	else:
 		g = 255
 		r = int(512*v)
+	r = limitTo(r,0,255)
+	g = limitTo(g,0,255)
 	return (r,g,16)
 
 def renderBalance(x,y,value,target,image):
@@ -203,10 +271,44 @@ def renderMotorSpeed(x,y,value):
 	descValue = rotationFont.render("%d%%"%(100*value), 1, (255,255,128))
 	screen.blit(descValue, (x-(descValue.get_width()/2), y+(msy/2)))
 
+def renderThrottle(x,y,value):
+	msx = 80
+	msy = 110
+	pygame.draw.rect(screen,(64,64,255),(x-(msx/2),y-(msy/2),msx,msy),0)
+	height = int((msy-10)*value)
+	offset = int((1-value)*(msy-10))
+	pygame.draw.rect(screen,gradGreenYellowRed(value),(5+x-(msx/2),offset+5+y-(msy/2),msx-10,height),0)
+	descValue = rotationFont.render("%d%%"%(100*value), 1, (255,255,128))
+	screen.blit(descValue, (x-(descValue.get_width()/2), y+(msy/2)))
+
+batteryIndactorBlinkFrame = 0
+def renderBatt(x,y,value):
+	# value = value/255.0
+	global batteryIndactorBlinkFrame
+	msx = 40
+	msy = 80
+	pygame.draw.rect(screen,(64,64,255),(x-(msx/2),y-(msy/2),msx,msy),0)
+	height = int((msy-10)*value)
+	offset = int((1-value)*(msy-10))
+	color =  gradGreenYellowRed(1-value)
+	pygame.draw.rect(screen,color,(5+x-(msx/2),offset+5+y-(msy/2),msx-10,height),0)
+	if value > 0.1:
+		descValue = rotationFont.render("%d%%"%(100*value), 1, color)
+		screen.blit(descValue, (x-(descValue.get_width()/2), y+(msy/2)))
+		batteryIndactorBlinkFrame = 0
+	else:
+		batteryIndactorBlinkFrame += 1
+		if batteryIndactorBlinkFrame > 10:
+			descValue = rotationFont.render("%d%%"%(100*value), 1, color)
+			screen.blit(descValue, (x-(descValue.get_width()/2), y+(msy/2)))
+		if batteryIndactorBlinkFrame > 20:
+			batteryIndactorBlinkFrame = 0
+
+
 def appGui():
 	global isAppRunning
 	global ioData
-	myfont = pygame.font.SysFont("monospace", 12)
+	myfont = pygame.font.SysFont("arial", 12)
 	while isAppRunning:
 		# GUI drawing
 		clock.tick(60)
@@ -223,6 +325,9 @@ def appGui():
 		renderMotorSpeed(770,520, ioData['input']['motors'][2])
 		renderMotorSpeed(30,50, ioData['input']['motors'][3])
 
+		renderBatt(30,285,ioData['input']['battery'])
+
+		renderThrottle(266,433,ioData['output']['alt'])
 
 		lpsText = myfont.render("LPS: %f"%(ioData['input']['lps']*10), 1, (255,255,0))
 		screen.blit(lpsText, (200, 20))
